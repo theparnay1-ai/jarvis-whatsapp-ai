@@ -1,0 +1,18 @@
+# Environment
+.env
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local database
+chatbot.db
+chatbot_backup.db
+
+# Local test files
+test.py
+check_token.py
+
+# Generated/local files
+*.log
