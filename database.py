@@ -178,3 +178,22 @@ def get_memories(sender):
     return memories
 
 Base.metadata.create_all(bind=engine)
+
+def update_memory(memory_id, new_memory):
+
+    db = SessionLocal()
+
+    memory = db.query(Memory).filter(
+        Memory.id == memory_id
+    ).first()
+
+    if memory:
+
+        memory.memory = new_memory
+
+        db.commit()
+        db.refresh(memory)
+
+    db.close()
+
+    return memory

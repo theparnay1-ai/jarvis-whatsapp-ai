@@ -5,16 +5,15 @@ from dotenv import load_dotenv
 from fastapi import Query
 from client import (
     should_reply,
-    aiprocess,
-    extract_memory
+    aiprocess
 )
+from memory import process_memory
 from whatsapp import send_whatsapp_message
 from database import (
     message_exists,
     save_message,
     save_response,
     get_recent_messages,
-    save_memory,
     get_memories
 )
 
@@ -107,17 +106,10 @@ async def receive_webhook(request: Request):
 
         print("Message saved to database.")
 
-        # Extract long-term memory
-        memory = extract_memory(text)
-
-        if memory:
-
-            print("Memory detected:", memory)
-
-            save_memory(
+        process_memory(
                 sender,
-                memory
-            )
+                text
+        )       
 
         # Decide whether JARVIS should reply
         reply_needed = should_reply(text)
