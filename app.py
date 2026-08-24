@@ -109,7 +109,7 @@ async def receive_webhook(request: Request):
         process_memory(
                 sender,
                 text
-        )       
+            )       
 
         # Decide whether JARVIS should reply
         reply_needed = should_reply(text)
