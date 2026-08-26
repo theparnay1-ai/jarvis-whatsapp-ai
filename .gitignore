@@ -16,3 +16,6 @@ check_token.py
 
 # Generated/local files
 *.log
+
+credentials.json
+token.json

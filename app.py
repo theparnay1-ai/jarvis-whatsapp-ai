@@ -3,10 +3,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 from fastapi import Query
-from client import (
-    should_reply,
-    aiprocess
-)
+from client import should_reply
+from agent.agent import process_message
 from memory import process_memory
 from whatsapp import send_whatsapp_message
 from database import (
@@ -111,7 +109,6 @@ async def receive_webhook(request: Request):
                 text
             )       
 
-        # Decide whether JARVIS should reply
         reply_needed = should_reply(text)
 
         print("Message saved to database.")
@@ -153,12 +150,15 @@ async def receive_webhook(request: Request):
             })
 
         # Generate AI response
-        reply = aiprocess(
-            text,
-            conversation_history,
-            memory_context
+        # Process message through the AI agent
+        agent_result = process_message(
+            sender,
+            text
         )
 
+        reply = agent_result["response"]
+
+        print("Agent Result:", agent_result)
         print("AI Reply:", reply)
 
         # Save AI response

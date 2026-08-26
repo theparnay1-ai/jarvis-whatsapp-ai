@@ -197,3 +197,325 @@ def update_memory(memory_id, new_memory):
     db.close()
 
     return memory
+
+class Issue(Base):
+
+    __tablename__ = "issues"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    sender = Column(
+        String,
+        index=True
+    )
+
+    description = Column(
+        Text
+    )
+
+    priority = Column(
+        String,
+        default="normal"
+    )
+
+    status = Column(
+        String,
+        default="open"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+def create_issue(
+    sender,
+    description,
+    priority="normal"
+):
+
+    db = SessionLocal()
+
+    issue = Issue(
+        sender=sender,
+        description=description,
+        priority=priority,
+        status="open"
+    )
+
+    db.add(issue)
+    db.commit()
+    db.refresh(issue)
+
+    db.close()
+
+    return issue
+
+def get_issue(issue_id):
+
+    db = SessionLocal()
+
+    issue = db.query(Issue).filter(
+        Issue.id == issue_id
+    ).first()
+
+    db.close()
+
+    return issue
+
+def update_issue(
+    issue_id,
+    status=None,
+    priority=None
+):
+
+    db = SessionLocal()
+
+    issue = db.query(Issue).filter(
+        Issue.id == issue_id
+    ).first()
+
+    if issue:
+
+        if status:
+            issue.status = status
+
+        if priority:
+            issue.priority = priority
+
+        db.commit()
+        db.refresh(issue)
+
+    db.close()
+
+    return issue
+
+class Lead(Base):
+
+    __tablename__ = "leads"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    sender = Column(
+        String,
+        index=True
+    )
+
+    requirement = Column(
+        Text
+    )
+
+    priority = Column(
+        String,
+        default="normal"
+    )
+
+    status = Column(
+        String,
+        default="new"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+def create_lead(
+    sender,
+    requirement,
+    priority="normal"
+):
+
+    db = SessionLocal()
+
+    lead = Lead(
+        sender=sender,
+        requirement=requirement,
+        priority=priority,
+        status="new"
+    )
+
+    db.add(lead)
+    db.commit()
+    db.refresh(lead)
+
+    db.close()
+
+    return lead
+
+def get_lead(lead_id):
+
+    db = SessionLocal()
+
+    lead = db.query(Lead).filter(
+        Lead.id == lead_id
+    ).first()
+
+    db.close()
+
+    return lead
+
+def update_lead(
+    lead_id,
+    status=None,
+    priority=None
+):
+
+    db = SessionLocal()
+
+    lead = db.query(Lead).filter(
+        Lead.id == lead_id
+    ).first()
+
+    if lead:
+
+        if status:
+            lead.status = status
+
+        if priority:
+            lead.priority = priority
+
+        db.commit()
+        db.refresh(lead)
+
+    db.close()
+
+    return lead
+
+class Meeting(Base):
+
+    __tablename__ = "meetings"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    sender = Column(
+        String,
+        index=True
+    )
+
+    requested_start = Column(
+        DateTime
+    )
+
+    requested_end = Column(
+        DateTime
+    )
+
+    status = Column(
+        String,
+        default="pending"
+    )
+
+    calendar_event_id = Column(
+        String,
+        nullable=True
+    )
+
+    alternative_slots = Column(
+        Text,
+        nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+def create_meeting_request(
+    sender,
+    requested_start,
+    requested_end,
+    alternative_slots=None
+):
+
+    db = SessionLocal()
+
+    meeting = Meeting(
+        sender=sender,
+        requested_start=requested_start,
+        requested_end=requested_end,
+        status="awaiting_confirmation",
+        alternative_slots=alternative_slots
+    )
+
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+    db.close()
+
+    return meeting
+
+    db = SessionLocal()
+
+    meeting = Meeting(
+        sender=sender,
+        requested_start=requested_start,
+        requested_end=requested_end,
+        status="awaiting_confirmation"
+    )
+
+    db.add(meeting)
+    db.commit()
+    db.refresh(meeting)
+
+    db.close()
+
+    return meeting
+
+def update_meeting(
+    meeting_id,
+    status=None,
+    calendar_event_id=None
+):
+
+    db = SessionLocal()
+
+    meeting = db.query(Meeting).filter(
+        Meeting.id == meeting_id
+    ).first()
+
+    if meeting:
+
+        if status:
+            meeting.status = status
+
+        if calendar_event_id:
+            meeting.calendar_event_id = calendar_event_id
+
+        db.commit()
+        db.refresh(meeting)
+
+    db.close()
+
+    return meeting
+
+def get_pending_meeting(sender):
+
+    db = SessionLocal()
+
+    meeting = (
+        db.query(Meeting)
+        .filter(
+            Meeting.sender == sender,
+            Meeting.status == "awaiting_confirmation"
+        )
+        .order_by(Meeting.created_at.desc())
+        .first()
+    )
+
+    db.close()
+
+    return meeting
