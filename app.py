@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Header, HTTPException, Depends
 from fastapi.responses import PlainTextResponse
 from dotenv import load_dotenv
 from fastapi import Query
@@ -23,6 +23,7 @@ from database import (
 )
 
 load_dotenv()
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
 app = FastAPI(
     title="Parnay AI ChatBot",
@@ -203,8 +204,22 @@ async def receive_webhook(request: Request):
             "status": "ignored"
         }
     
+def verify_admin_key(
+    x_admin_key: str = Header(None)
+):
+
+    if not ADMIN_API_KEY or x_admin_key != ADMIN_API_KEY:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing admin API key"
+        )
+
+    return True
+    
 @app.get("/admin/customers")
-def get_admin_customers():
+def get_admin_customers(
+    _: bool = Depends(verify_admin_key)
+):
 
     db = SessionLocal()
 
@@ -231,7 +246,9 @@ def get_admin_customers():
     }
 
 @app.get("/admin/leads")
-def get_admin_leads():
+def get_admin_leads(
+    _: bool = Depends(verify_admin_key)
+):
 
     db = SessionLocal()
 
@@ -259,7 +276,9 @@ def get_admin_leads():
 
 
 @app.get("/admin/issues")
-def get_admin_issues():
+def get_admin_issues(
+    _: bool = Depends(verify_admin_key)
+):
 
     db = SessionLocal()
 
@@ -287,7 +306,9 @@ def get_admin_issues():
 
 
 @app.get("/admin/meetings")
-def get_admin_meetings():
+def get_admin_meetings(
+    _: bool = Depends(verify_admin_key)
+):
 
     db = SessionLocal()
 
@@ -315,7 +336,9 @@ def get_admin_meetings():
     }
 
 @app.get("/admin/stats")
-def get_admin_stats():
+def get_admin_stats(
+    _: bool = Depends(verify_admin_key)
+):
 
     db = SessionLocal()
 
