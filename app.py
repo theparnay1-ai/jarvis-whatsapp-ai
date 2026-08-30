@@ -8,13 +8,18 @@ from agent.agent import process_message
 from memory import process_memory
 from whatsapp import send_whatsapp_message
 from database import (
+    SessionLocal,
     message_exists,
     save_message,
     save_response,
     get_recent_messages,
     get_memories,
     get_customer,
-    create_customer
+    create_customer,
+    Customer,
+    Lead,
+    Issue,
+    Meeting
 )
 
 load_dotenv()
@@ -197,3 +202,150 @@ async def receive_webhook(request: Request):
         return {
             "status": "ignored"
         }
+    
+@app.get("/admin/customers")
+def get_admin_customers():
+
+    db = SessionLocal()
+
+    customers = db.query(Customer).all()
+
+    result = []
+
+    for customer in customers:
+
+        result.append({
+            "id": customer.id,
+            "sender": customer.sender,
+            "name": customer.name,
+            "email": customer.email,
+            "created_at": customer.created_at,
+            "last_interaction": customer.last_interaction
+        })
+
+    db.close()
+
+    return {
+        "count": len(result),
+        "customers": result
+    }
+
+@app.get("/admin/leads")
+def get_admin_leads():
+
+    db = SessionLocal()
+
+    leads = db.query(Lead).all()
+
+    result = []
+
+    for lead in leads:
+
+        result.append({
+            "id": lead.id,
+            "sender": lead.sender,
+            "requirement": lead.requirement,
+            "priority": lead.priority,
+            "status": lead.status,
+            "created_at": lead.created_at
+        })
+
+    db.close()
+
+    return {
+        "count": len(result),
+        "leads": result
+    }
+
+
+@app.get("/admin/issues")
+def get_admin_issues():
+
+    db = SessionLocal()
+
+    issues = db.query(Issue).all()
+
+    result = []
+
+    for issue in issues:
+
+        result.append({
+            "id": issue.id,
+            "sender": issue.sender,
+            "description": issue.description,
+            "priority": issue.priority,
+            "status": issue.status,
+            "created_at": issue.created_at
+        })
+
+    db.close()
+
+    return {
+        "count": len(result),
+        "issues": result
+    }
+
+
+@app.get("/admin/meetings")
+def get_admin_meetings():
+
+    db = SessionLocal()
+
+    meetings = db.query(Meeting).all()
+
+    result = []
+
+    for meeting in meetings:
+
+        result.append({
+            "id": meeting.id,
+            "sender": meeting.sender,
+            "requested_start": meeting.requested_start,
+            "requested_end": meeting.requested_end,
+            "status": meeting.status,
+            "calendar_event_id": meeting.calendar_event_id,
+            "created_at": meeting.created_at
+        })
+
+    db.close()
+
+    return {
+        "count": len(result),
+        "meetings": result
+    }
+
+@app.get("/admin/stats")
+def get_admin_stats():
+
+    db = SessionLocal()
+
+    total_customers = db.query(Customer).count()
+    total_leads = db.query(Lead).count()
+
+    open_issues = (
+        db.query(Issue)
+        .filter(Issue.status == "open")
+        .count()
+    )
+
+    booked_meetings = (
+        db.query(Meeting)
+        .filter(Meeting.status == "booked")
+        .count()
+    )
+
+    pending_meetings = (
+        db.query(Meeting)
+        .filter(Meeting.status == "awaiting_confirmation")
+        .count()
+    )
+
+    db.close()
+
+    return {
+        "customers": total_customers,
+        "leads": total_leads,
+        "open_issues": open_issues,
+        "booked_meetings": booked_meetings,
+        "pending_meetings": pending_meetings
+    }
