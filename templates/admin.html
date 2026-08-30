@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Agent Admin Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .auth {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 70%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #111827;
+            color: white;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        @media (max-width: 900px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            input {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>AI Agent Admin Dashboard</h1>
+
+    <p class="subtitle">
+        Customer CRM, leads, issues and meeting management
+    </p>
+
+    <div class="auth">
+
+        <input
+            type="password"
+            id="apiKey"
+            placeholder="Enter Admin API Key"
+        >
+
+        <button onclick="loadDashboard()">
+            Load Dashboard
+        </button>
+
+    </div>
+
+    <div class="stats">
+
+        <div class="card">
+            <h3>Customers</h3>
+            <p id="customers">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Leads</h3>
+            <p id="leads">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Open Issues</h3>
+            <p id="issues">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Booked Meetings</h3>
+            <p id="meetings">-</p>
+        </div>
+
+        <div class="card">
+            <h3>Pending Meetings</h3>
+            <p id="pending">-</p>
+        </div>
+
+    </div>
+
+    <div class="section">
+
+        <h2>Recent Leads</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Requirement</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="leadTable"></tbody>
+
+        </table>
+
+    </div>
+
+    <div class="section">
+
+        <h2>Open Issues</h2>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer</th>
+                    <th>Description</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="issueTable"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+async function apiRequest(endpoint, apiKey) {
+
+    const response = await fetch(endpoint, {
+
+        headers: {
+            "X-Admin-Key": apiKey
+        }
+
+    });
+
+    if (!response.ok) {
+        throw new Error("Authentication failed");
+    }
+
+    return await response.json();
+}
+
+
+async function loadDashboard() {
+
+    const apiKey = document.getElementById("apiKey").value;
+
+    if (!apiKey) {
+        alert("Please enter the admin API key.");
+        return;
+    }
+
+    try {
+
+        const stats = await apiRequest(
+            "/admin/stats",
+            apiKey
+        );
+
+        document.getElementById("customers").textContent =
+            stats.customers;
+
+        document.getElementById("leads").textContent =
+            stats.leads;
+
+        document.getElementById("issues").textContent =
+            stats.open_issues;
+
+        document.getElementById("meetings").textContent =
+            stats.booked_meetings;
+
+        document.getElementById("pending").textContent =
+            stats.pending_meetings;
+
+
+        const leads = await apiRequest(
+            "/admin/leads",
+            apiKey
+        );
+
+        const leadTable =
+            document.getElementById("leadTable");
+
+        leadTable.innerHTML = "";
+
+        leads.leads.slice(-10).reverse().forEach(lead => {
+
+            leadTable.innerHTML += `
+    <tr>
+        <td>${lead.id}</td>
+        <td>${lead.sender}</td>
+        <td>${lead.requirement}</td>
+        <td>${lead.priority}</td>
+
+        <td>
+            <select
+                onchange="updateLead(${lead.id}, this.value)"
+            >
+                <option value="new"
+                    ${lead.status === "new" ? "selected" : ""}>
+                    New
+                </option>
+
+                <option value="contacted"
+                    ${lead.status === "contacted" ? "selected" : ""}>
+                    Contacted
+                </option>
+
+                <option value="qualified"
+                    ${lead.status === "qualified" ? "selected" : ""}>
+                    Qualified
+                </option>
+
+                <option value="demo_requested"
+                    ${lead.status === "demo_requested" ? "selected" : ""}>
+                    Demo Requested
+                </option>
+
+                <option value="converted"
+                    ${lead.status === "converted" ? "selected" : ""}>
+                    Converted
+                </option>
+
+                <option value="lost"
+                    ${lead.status === "lost" ? "selected" : ""}>
+                    Lost
+                </option>
+
+            </select>
+        </td>
+    </tr>
+`;
+
+        });
+
+
+        const issues = await apiRequest(
+            "/admin/issues?status=open",
+            apiKey
+        );
+
+        const issueTable =
+            document.getElementById("issueTable");
+
+        issueTable.innerHTML = "";
+
+        issues.issues.forEach(issue => {
+
+            issueTable.innerHTML += `
+                <tr>
+                    <td>${issue.id}</td>
+                    <td>${issue.sender}</td>
+                    <td>${issue.description}</td>
+                    <td>${issue.priority}</td>
+                    <td class="status">${issue.status}</td>
+                </tr>
+            `;
+
+        });
+
+    }
+
+    catch (error) {
+
+        alert(
+            "Unable to load dashboard. Check your API key."
+        );
+
+    }
+
+}
+
+async function updateLead(leadId, status) {
+
+const apiKey = document.getElementById("apiKey").value;
+
+try {
+
+    const response = await fetch(
+        `/admin/leads/${leadId}?status=${encodeURIComponent(status)}`,
+        {
+            method: "PATCH",
+
+            headers: {
+                "X-Admin-Key": apiKey
+            }
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Failed to update lead");
+    }
+
+    alert("Lead updated successfully.");
+
+    loadDashboard();
+
+} catch (error) {
+
+    alert(
+        "Unable to update lead. Check your admin API key."
+    );
+
+}
+}
+</script>
+
+</body>
+</html>

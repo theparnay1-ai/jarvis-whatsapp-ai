@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, Request, Header, HTTPException, Depends
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse
 from dotenv import load_dotenv
 from fastapi import Query
 from client import should_reply
@@ -34,6 +34,14 @@ app = FastAPI(
     ),
     version="2.0.0"
 )
+
+@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
+def admin_dashboard():
+
+    with open("templates/admin.html", "r", encoding="utf-8") as file:
+        html = file.read()
+
+    return HTMLResponse(content=html)
 
 
 @app.get("/", tags=["System"])
@@ -282,6 +290,74 @@ def get_admin_leads(
 
     leads = query.all()
 
+    result = []
+
+    for lead in leads:
+
+        result.append({
+            "id": lead.id,
+            "sender": lead.sender,
+            "requirement": lead.requirement,
+            "priority": lead.priority,
+            "status": lead.status,
+            "created_at": lead.created_at
+        })
+
+    db.close()
+
+    return {
+        "count": len(result),
+        "leads": result
+    }
+
+@app.patch(
+    "/admin/leads/{lead_id}",
+    tags=["Admin"],
+    summary="Update a customer lead",
+    description="Update the status or priority of an existing customer lead."
+)
+def update_admin_lead(
+    lead_id: int,
+    status: str = None,
+    priority: str = None,
+    _: bool = Depends(verify_admin_key)
+):
+
+    db = SessionLocal()
+
+    lead = db.query(Lead).filter(
+        Lead.id == lead_id
+    ).first()
+
+    if not lead:
+        db.close()
+
+        raise HTTPException(
+            status_code=404,
+            detail="Lead not found"
+        )
+
+    if status:
+        lead.status = status
+
+    if priority:
+        lead.priority = priority
+
+    db.commit()
+    db.refresh(lead)
+    db.close()
+
+    return {
+        "success": True,
+        "lead": {
+            "id": lead.id,
+            "sender": lead.sender,
+            "requirement": lead.requirement,
+            "priority": lead.priority,
+            "status": lead.status,
+            "created_at": lead.created_at
+        }
+    }
 
 @app.get(
     "/admin/issues",
