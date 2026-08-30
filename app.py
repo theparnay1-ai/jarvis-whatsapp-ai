@@ -247,42 +247,50 @@ def get_admin_customers(
 
 @app.get("/admin/leads")
 def get_admin_leads(
-    _: bool = Depends(verify_admin_key)
+    _: bool = Depends(verify_admin_key),
+    status: str = None,
+    priority: str = None
 ):
 
     db = SessionLocal()
 
-    leads = db.query(Lead).all()
+    query = db.query(Lead)
 
-    result = []
+    if status:
+        query = query.filter(
+            Lead.status == status
+        )
 
-    for lead in leads:
+    if priority:
+        query = query.filter(
+            Lead.priority == priority
+        )
 
-        result.append({
-            "id": lead.id,
-            "sender": lead.sender,
-            "requirement": lead.requirement,
-            "priority": lead.priority,
-            "status": lead.status,
-            "created_at": lead.created_at
-        })
-
-    db.close()
-
-    return {
-        "count": len(result),
-        "leads": result
-    }
+    leads = query.all()
 
 
 @app.get("/admin/issues")
 def get_admin_issues(
-    _: bool = Depends(verify_admin_key)
+    _: bool = Depends(verify_admin_key),
+    status: str = None,
+    priority: str = None
 ):
 
     db = SessionLocal()
 
-    issues = db.query(Issue).all()
+    query = db.query(Issue)
+
+    if status:
+        query = query.filter(
+            Issue.status == status
+        )
+
+    if priority:
+        query = query.filter(
+            Issue.priority == priority
+        )
+
+    issues = query.all()
 
     result = []
 
