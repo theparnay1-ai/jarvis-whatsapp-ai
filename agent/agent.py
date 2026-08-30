@@ -3,7 +3,11 @@ from agent.context import get_customer_context
 from agent.responder import generate_response
 from agent.tools.issues import create_customer_issue
 from agent.tools.notifications import create_owner_notification
-from agent.tools.leads import create_customer_lead
+from agent.tools.leads import (
+    create_customer_lead,
+    get_customer_lead_by_sender,
+    update_customer_lead
+)
 from agent.tools.meetings import (
     check_meeting_slot,
     find_available_meeting_slots,
@@ -414,13 +418,61 @@ def process_message(sender, message):
 
     elif intent == "lead":
 
-        action = "create_lead"
+        existing_lead = get_customer_lead_by_sender(sender)
 
-        lead = create_customer_lead(
-            sender=sender,
-            requirement=message,
-            priority=priority
-        )
+        # Determine lead status from the customer's message
+        message_lower = message.lower()
+
+        if any(word in message_lower for word in [
+            "demo",
+            "demonstration",
+            "show me",
+            "see the chatbot"
+        ]):
+            lead_status = "demo_requested"
+
+        elif any(word in message_lower for word in [
+            "need",
+            "require",
+            "looking for",
+            "want to build",
+            "want to develop"
+        ]):
+            lead_status = "qualified"
+
+        else:
+            lead_status = "contacted"
+
+        # Existing lead → update it
+        if existing_lead["success"]:
+
+            action = "update_lead"
+
+            lead = update_customer_lead(
+                lead_id=existing_lead["lead_id"],
+                status=lead_status,
+                priority=priority,
+                requirement=message
+            )
+
+        # New customer → create lead
+        else:
+
+            action = "create_lead"
+
+            lead = create_customer_lead(
+                sender=sender,
+                requirement=message,
+                priority=priority
+            )
+
+            # Update status if needed
+            if lead_status != "new":
+
+                lead = update_customer_lead(
+                    lead_id=lead["lead_id"],
+                    status=lead_status
+                )
 
     elif intent == "payment":
         action = "handle_payment"

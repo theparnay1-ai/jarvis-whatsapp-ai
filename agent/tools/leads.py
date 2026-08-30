@@ -1,4 +1,6 @@
 from database import (
+    SessionLocal,
+    Lead,
     create_lead,
     get_lead,
     update_lead
@@ -54,7 +56,8 @@ def get_customer_lead(lead_id):
 def update_customer_lead(
     lead_id,
     status=None,
-    priority=None
+    priority=None,
+    requirement=None
 ):
     """
     Update an existing lead.
@@ -66,6 +69,15 @@ def update_customer_lead(
         priority=priority
     )
 
+    if status:
+        lead.status = status
+
+    if priority:
+        lead.priority = priority
+
+    if requirement:
+        lead.requirement = requirement
+        
     if not lead:
         return {
             "success": False,
@@ -75,6 +87,37 @@ def update_customer_lead(
     return {
         "success": True,
         "lead_id": lead.id,
+        "status": lead.status,
+        "priority": lead.priority,
+        "requirement": lead.requirement
+    }
+
+def get_customer_lead_by_sender(sender):
+    """
+    Retrieve the most recent lead for a WhatsApp customer.
+    """
+
+    db = SessionLocal()
+
+    lead = (
+        db.query(Lead)
+        .filter(Lead.sender == sender)
+        .order_by(Lead.created_at.desc())
+        .first()
+    )
+
+    db.close()
+
+    if not lead:
+        return {
+            "success": False,
+            "error": "No lead found"
+        }
+
+    return {
+        "success": True,
+        "lead_id": lead.id,
+        "sender": lead.sender,
         "status": lead.status,
         "priority": lead.priority,
         "requirement": lead.requirement
