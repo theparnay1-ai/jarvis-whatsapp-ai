@@ -243,144 +243,170 @@ async function apiRequest(endpoint, apiKey) {
 
 async function loadDashboard() {
 
-    const apiKey = document.getElementById("apiKey").value;
+const apiKey = document.getElementById("apiKey").value;
 
-    if (!apiKey) {
-        alert("Please enter the admin API key.");
-        return;
-    }
+if (!apiKey) {
+    alert("Please enter the admin API key.");
+    return;
+}
 
-    try {
+try {
 
-        const stats = await apiRequest(
-            "/admin/stats",
-            apiKey
-        );
+    const stats = await apiRequest(
+        "/admin/stats",
+        apiKey
+    );
 
-        document.getElementById("customers").textContent =
-            stats.customers;
+    document.getElementById("customers").textContent =
+        stats.customers;
 
-        document.getElementById("leads").textContent =
-            stats.leads;
+    document.getElementById("leads").textContent =
+        stats.leads;
 
-        document.getElementById("issues").textContent =
-            stats.open_issues;
+    document.getElementById("issues").textContent =
+        stats.open_issues;
 
-        document.getElementById("meetings").textContent =
-            stats.booked_meetings;
+    document.getElementById("meetings").textContent =
+        stats.booked_meetings;
 
-        document.getElementById("pending").textContent =
-            stats.pending_meetings;
-
-
-        const leads = await apiRequest(
-            "/admin/leads",
-            apiKey
-        );
-
-        const leadTable =
-            document.getElementById("leadTable");
-
-        leadTable.innerHTML = "";
-
-        leads.leads.slice(-10).reverse().forEach(lead => {
-
-            leadTable.innerHTML += `
-    <tr>
-        <td>${lead.id}</td>
-        <td>${lead.sender}</td>
-        <td>${lead.requirement}</td>
-        <td>${lead.priority}</td>
-
-        <td>
-            <select
-                onchange="updateLead(${lead.id}, this.value)"
-            >
-                <option value="new"
-                    ${lead.status === "new" ? "selected" : ""}>
-                    New
-                </option>
-
-                <option value="contacted"
-                    ${lead.status === "contacted" ? "selected" : ""}>
-                    Contacted
-                </option>
-
-                <option value="qualified"
-                    ${lead.status === "qualified" ? "selected" : ""}>
-                    Qualified
-                </option>
-
-                <option value="demo_requested"
-                    ${lead.status === "demo_requested" ? "selected" : ""}>
-                    Demo Requested
-                </option>
-
-                <option value="converted"
-                    ${lead.status === "converted" ? "selected" : ""}>
-                    Converted
-                </option>
-
-                <option value="lost"
-                    ${lead.status === "lost" ? "selected" : ""}>
-                    Lost
-                </option>
-
-            </select>
-        </td>
-    </tr>
-`;
-
-        });
+    document.getElementById("pending").textContent =
+        stats.pending_meetings;
 
 
-        const issues = await apiRequest(
-            "/admin/issues?status=open",
-            apiKey
-        );
+    const leads = await apiRequest(
+        "/admin/leads",
+        apiKey
+    );
 
-        const issueTable =
-            document.getElementById("issueTable");
+    const leadTable =
+        document.getElementById("leadTable");
 
-        issueTable.innerHTML = "";
+    leadTable.innerHTML = "";
 
-        issues.issues.forEach(issue => {
+    leads.leads.slice(-10).reverse().forEach(lead => {
 
-            issueTable.innerHTML += `
-                <tr>
-                    <td>${issue.id}</td>
-                    <td>${issue.sender}</td>
-                    <td>${issue.description}</td>
-                    <td>${issue.priority}</td>
-                    <td class="status">${issue.status}</td>
-                </tr>
-            `;
+        leadTable.innerHTML += `
+            <tr>
+                <td>${lead.id}</td>
+                <td>${lead.sender}</td>
+                <td>${lead.requirement}</td>
 
-        });
+                <td>
+                    <select
+                        onchange="updateLead(${lead.id}, null, this.value)"
+                    >
+                        <option value="normal"
+                            ${lead.priority === "normal" ? "selected" : ""}>
+                            Normal
+                        </option>
 
-    }
+                        <option value="high"
+                            ${lead.priority === "high" ? "selected" : ""}>
+                            High
+                        </option>
 
-    catch (error) {
+                        <option value="urgent"
+                            ${lead.priority === "urgent" ? "selected" : ""}>
+                            Urgent
+                        </option>
+                    </select>
+                </td>
 
-        alert(
-            "Unable to load dashboard. Check your API key."
-        );
+                <td>
+                    <select
+                        onchange="updateLead(${lead.id}, this.value, null)"
+                    >
+                        <option value="new"
+                            ${lead.status === "new" ? "selected" : ""}>
+                            New
+                        </option>
 
-    }
+                        <option value="contacted"
+                            ${lead.status === "contacted" ? "selected" : ""}>
+                            Contacted
+                        </option>
+
+                        <option value="qualified"
+                            ${lead.status === "qualified" ? "selected" : ""}>
+                            Qualified
+                        </option>
+
+                        <option value="demo_requested"
+                            ${lead.status === "demo_requested" ? "selected" : ""}>
+                            Demo Requested
+                        </option>
+
+                        <option value="converted"
+                            ${lead.status === "converted" ? "selected" : ""}>
+                            Converted
+                        </option>
+
+                        <option value="lost"
+                            ${lead.status === "lost" ? "selected" : ""}>
+                            Lost
+                        </option>
+                    </select>
+                </td>
+            </tr>
+        `;
+
+    });
+
+
+    const issues = await apiRequest(
+        "/admin/issues?status=open",
+        apiKey
+    );
+
+    const issueTable =
+        document.getElementById("issueTable");
+
+    issueTable.innerHTML = "";
+
+    issues.issues.forEach(issue => {
+
+        issueTable.innerHTML += `
+            <tr>
+                <td>${issue.id}</td>
+                <td>${issue.sender}</td>
+                <td>${issue.description}</td>
+                <td>${issue.priority}</td>
+                <td class="status">${issue.status}</td>
+            </tr>
+        `;
+
+    });
+
+} catch (error) {
+
+    alert(
+        "Unable to load dashboard. Check your API key."
+    );
 
 }
 
-async function updateLead(leadId, status) {
+}
+
+async function updateLead(leadId, status = null, priority = null) {
 
 const apiKey = document.getElementById("apiKey").value;
 
 try {
 
+    const params = new URLSearchParams();
+
+    if (status) {
+        params.append("status", status);
+    }
+
+    if (priority) {
+        params.append("priority", priority);
+    }
+
     const response = await fetch(
-        `/admin/leads/${leadId}?status=${encodeURIComponent(status)}`,
+        `/admin/leads/${leadId}?${params.toString()}`,
         {
             method: "PATCH",
-
             headers: {
                 "X-Admin-Key": apiKey
             }
@@ -390,8 +416,6 @@ try {
     if (!response.ok) {
         throw new Error("Failed to update lead");
     }
-
-    alert("Lead updated successfully.");
 
     loadDashboard();
 
