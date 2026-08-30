@@ -12,7 +12,9 @@ from database import (
     save_message,
     save_response,
     get_recent_messages,
-    get_memories
+    get_memories,
+    get_customer,
+    create_customer
 )
 
 load_dotenv()
@@ -71,6 +73,17 @@ async def receive_webhook(request: Request):
         sender = message["from"]
         message_id = message["id"]
         message_type = message["type"]
+
+        # Create customer profile if this is a new customer
+        customer = get_customer(sender)
+
+        if not customer:
+            create_customer(sender)
+
+            print("New customer profile created.")
+
+        else:
+            print("Existing customer profile found.")
 
         # Ignore non-text messages
         if message_type != "text":

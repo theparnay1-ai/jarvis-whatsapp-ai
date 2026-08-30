@@ -519,3 +519,101 @@ def get_pending_meeting(sender):
     db.close()
 
     return meeting
+
+class Customer(Base):
+
+    __tablename__ = "customers"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    sender = Column(
+        String,
+        unique=True,
+        index=True
+    )
+
+    name = Column(
+        String,
+        nullable=True
+    )
+
+    email = Column(
+        String,
+        nullable=True
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    last_interaction = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+Base.metadata.create_all(bind=engine)
+
+def create_customer(sender, name=None, email=None):
+
+    db = SessionLocal()
+
+    customer = Customer(
+        sender=sender,
+        name=name,
+        email=email
+    )
+
+    db.add(customer)
+    db.commit()
+    db.refresh(customer)
+
+    db.close()
+
+    return customer
+
+
+def get_customer(sender):
+
+    db = SessionLocal()
+
+    customer = (
+        db.query(Customer)
+        .filter(Customer.sender == sender)
+        .first()
+    )
+
+    db.close()
+
+    return customer
+
+def update_customer(sender, name=None, email=None):
+
+    db = SessionLocal()
+
+    customer = (
+        db.query(Customer)
+        .filter(Customer.sender == sender)
+        .first()
+    )
+
+    if customer:
+
+        if name:
+            customer.name = name
+
+        if email:
+            customer.email = email
+
+        customer.last_interaction = datetime.utcnow()
+
+        db.commit()
+        db.refresh(customer)
+
+    db.close()
+
+    return customer

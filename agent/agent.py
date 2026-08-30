@@ -20,6 +20,12 @@ from agent.tools.meetings import get_pending_customer_meeting
 from agent.meeting_parser import extract_selected_meeting_time
 from datetime import datetime, timedelta
 from client import client
+from database import (
+    get_customer,
+    update_customer,
+    create_customer
+)
+import re
 
 
 def is_meeting_confirmation(message):
@@ -149,6 +155,14 @@ def process_message(sender, message):
     """
     Process an incoming customer message through the AI agent.
     """
+
+        # Ensure customer profile exists and update last interaction
+    customer = get_customer(sender)
+
+    if not customer:
+        create_customer(sender)
+    else:
+        update_customer(sender)
 
     # Get customer context
     context = get_customer_context(sender)
@@ -422,6 +436,45 @@ def process_message(sender, message):
 
         # Determine lead status from the customer's message
         message_lower = message.lower()
+
+                # Capture customer email if provided
+        email_match = re.search(
+            r'[\w\.-]+@[\w\.-]+\.\w+',
+            message
+        )
+
+        email = email_match.group(0) if email_match else None
+
+        # Capture customer name from common introductions
+        name = None
+
+        name_match = re.search(
+            r"(?:i am|i'm|my name is)\s+([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
+            message,
+            re.IGNORECASE
+        )
+
+        if name_match:
+            name = name_match.group(1).strip()
+
+            # Update CRM profile
+        if name or email:
+
+            customer = get_customer(sender)
+
+            if not customer:
+                create_customer(
+                    sender=sender,
+                    name=name,
+                    email=email
+                )
+
+            else:
+                update_customer(
+                    sender=sender,
+                    name=name,
+                    email=email
+                )
 
         if any(word in message_lower for word in [
             "demo",
