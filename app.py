@@ -26,13 +26,17 @@ load_dotenv()
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
 app = FastAPI(
-    title="Parnay AI ChatBot",
-    description="AI-powered WhatsApp chatbot",
-    version="1.0.0"
+    title="AI WhatsApp Customer Management Agent",
+    description=(
+        "AI-powered WhatsApp automation backend with "
+        "customer CRM, lead qualification, issue tracking, "
+        "Google Calendar scheduling, and protected admin APIs."
+    ),
+    version="2.0.0"
 )
 
 
-@app.get("/")
+@app.get("/", tags=["System"])
 def home():
     return {
         "status": "online",
@@ -40,14 +44,14 @@ def home():
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=["System"])
 def health():
     return {
         "status": "healthy"
     }
 
 
-@app.get("/webhook")
+@app.get("/webhook", tags=["WhatsApp"])
 def verify_webhook(
     hub_mode: str = Query(None, alias="hub.mode"),
     hub_verify_token: str = Query(None, alias="hub.verify_token"),
@@ -68,7 +72,7 @@ def verify_webhook(
     )
 
 
-@app.post("/webhook")
+@app.post("/webhook", tags=["WhatsApp"])
 async def receive_webhook(request: Request):
 
     data = await request.json()
@@ -216,7 +220,12 @@ def verify_admin_key(
 
     return True
     
-@app.get("/admin/customers")
+@app.get(
+    "/admin/customers",
+    tags=["Admin"],
+    summary="View customers",
+    description="Retrieve customer profiles stored by the WhatsApp AI agent."
+)
 def get_admin_customers(
     _: bool = Depends(verify_admin_key)
 ):
@@ -245,7 +254,12 @@ def get_admin_customers(
         "customers": result
     }
 
-@app.get("/admin/leads")
+@app.get(
+    "/admin/leads",
+    tags=["Admin"],
+    summary="Manage customer leads",
+    description="Retrieve customer leads with optional status and priority filtering."
+)
 def get_admin_leads(
     _: bool = Depends(verify_admin_key),
     status: str = None,
@@ -269,7 +283,12 @@ def get_admin_leads(
     leads = query.all()
 
 
-@app.get("/admin/issues")
+@app.get(
+    "/admin/issues",
+    tags=["Admin"],
+    summary="Track customer issues",
+    description="Retrieve customer issues with optional status and priority filtering."
+)
 def get_admin_issues(
     _: bool = Depends(verify_admin_key),
     status: str = None,
@@ -313,7 +332,12 @@ def get_admin_issues(
     }
 
 
-@app.get("/admin/meetings")
+@app.get(
+    "/admin/meetings",
+    tags=["Admin"],
+    summary="View scheduled meetings",
+    description="Retrieve customer meeting requests and their booking status."
+)
 def get_admin_meetings(
     _: bool = Depends(verify_admin_key)
 ):
@@ -343,7 +367,12 @@ def get_admin_meetings(
         "meetings": result
     }
 
-@app.get("/admin/stats")
+@app.get(
+    "/admin/stats",
+    tags=["Admin"],
+    summary="View business statistics",
+    description="Retrieve aggregated customer, lead, issue, and meeting statistics."
+)
 def get_admin_stats(
     _: bool = Depends(verify_admin_key)
 ):
