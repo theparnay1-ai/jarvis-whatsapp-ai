@@ -485,3 +485,52 @@ def get_admin_stats(
         "booked_meetings": booked_meetings,
         "pending_meetings": pending_meetings
     }
+
+@app.patch(
+    "/admin/issues/{issue_id}",
+    tags=["Admin"],
+    summary="Update a customer issue",
+    description="Update the status or priority of an existing customer issue."
+)
+def update_admin_issue(
+    issue_id: int,
+    status: str = None,
+    priority: str = None,
+    _: bool = Depends(verify_admin_key)
+):
+
+    db = SessionLocal()
+
+    issue = db.query(Issue).filter(
+        Issue.id == issue_id
+    ).first()
+
+    if not issue:
+        db.close()
+
+        raise HTTPException(
+            status_code=404,
+            detail="Issue not found"
+        )
+
+    if status:
+        issue.status = status
+
+    if priority:
+        issue.priority = priority
+
+    db.commit()
+    db.refresh(issue)
+    db.close()
+
+    return {
+        "success": True,
+        "issue": {
+            "id": issue.id,
+            "sender": issue.sender,
+            "description": issue.description,
+            "priority": issue.priority,
+            "status": issue.status,
+            "created_at": issue.created_at
+        }
+    }
