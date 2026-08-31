@@ -262,6 +262,55 @@ def get_admin_customers(
         "customers": result
     }
 
+@app.patch(
+    "/admin/customers/{customer_id}",
+    tags=["Admin"],
+    summary="Update a customer",
+    description="Update a customer's name or email address."
+)
+def update_admin_customer(
+    customer_id: int,
+    name: str = None,
+    email: str = None,
+    _: bool = Depends(verify_admin_key)
+):
+
+    db = SessionLocal()
+
+    customer = db.query(Customer).filter(
+        Customer.id == customer_id
+    ).first()
+
+    if not customer:
+        db.close()
+
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
+        )
+
+    if name is not None:
+        customer.name = name
+
+    if email is not None:
+        customer.email = email
+
+    db.commit()
+    db.refresh(customer)
+    db.close()
+
+    return {
+        "success": True,
+        "customer": {
+            "id": customer.id,
+            "sender": customer.sender,
+            "name": customer.name,
+            "email": customer.email,
+            "created_at": customer.created_at,
+            "last_interaction": customer.last_interaction
+        }
+    }
+
 @app.get(
     "/admin/leads",
     tags=["Admin"],
