@@ -5,126 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>AI Agent Admin Dashboard</title>
-
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            color: #1f2937;
-            padding: 30px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        h1 {
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: #6b7280;
-            margin-bottom: 30px;
-        }
-
-        .auth {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        input {
-            width: 70%;
-            padding: 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-        }
-
-        button {
-            padding: 12px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: #111827;
-            color: white;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-
-        .card h3 {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        th {
-            background: #f9fafb;
-        }
-
-        .status {
-            font-weight: bold;
-        }
-
-        @media (max-width: 900px) {
-            .stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            input {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/admin.css">
 </head>
 
 <body>
+    <div class="sidebar">
 
-<div class="container">
+        <div class="sidebar-title">
+            AI Agent
+        </div>
+    
+        <a href="#dashboard">
+            Dashboard
+        </a>
+    
+        <a href="#customers-section">
+            Customers
+        </a>
+    
+        <a href="#leads-section">
+            Leads
+        </a>
+    
+        <a href="#issues-section">
+            Issues
+        </a>
+    
+        <a href="#meetings-section">
+            Meetings
+        </a>
+    
+    </div>
+        
+        <div class="main-content">
+        
+        <div class="container" id="dashboard">
 
     <h1>AI Agent Admin Dashboard</h1>
 
@@ -135,14 +50,43 @@
     <div class="auth">
 
         <input
-            type="password"
-            id="apiKey"
-            placeholder="Enter Admin API Key"
-        >
+    type="password"
+    id="apiKey"
+    placeholder="Enter Admin API Key"
+>
 
-        <button onclick="loadDashboard()">
-            Load Dashboard
-        </button>
+<button onclick="loadDashboard()">Load Dashboard</button>
+
+<button onclick="loadDashboard()" class="refresh-button">
+    🔄 Refresh
+</button>
+
+<button
+    onclick="logoutAdmin()"
+    class="logout-button"
+>
+    Logout
+</button>
+
+<span
+    id="loadingMessage"
+    class="loading-message"
+    hidden
+>
+    Loading dashboard...
+</span>
+
+<span
+    id="lastUpdated"
+    class="last-updated"
+>
+    Not loaded yet
+</span>
+
+<div
+    id="updateMessage"
+    class="update-message"
+></div>
 
     </div>
 
@@ -175,11 +119,23 @@
 
     </div>
 
-    <div class="section">
+    <div class="section" id="customers-section">
 
         <h2>Customers</h2>
-    
-        <div class="table-container">
+
+        <div class="customer-search-container">
+
+            <input
+            type="text"
+            id="customerSearch"
+            placeholder="🔎 Search by name, email or WhatsApp number..."
+            oninput="filterCustomers()"
+            class="customer-search"
+        >
+
+</div>
+
+<div class="table-container">
     
             <table>
     
@@ -203,7 +159,7 @@
     
     </div>
 
-    <div class="section">
+    <div class="section" id="leads-section">
 
         <h2>Recent Leads</h2>
 
@@ -225,7 +181,7 @@
 
     </div>
 
-    <div class="section">
+    <div class="section" id="issues-section">
 
         <h2>Open Issues</h2>
 
@@ -258,402 +214,61 @@
 
     </div>
 
+    <div class="section" id="meetings-section">
+
+        <h2>Meetings</h2>
+
+        <div class="meeting-filter-container">
+
+            <label for="meetingStatusFilter">
+                Filter:
+            </label>
+        
+            <select
+                id="meetingStatusFilter"
+                onchange="loadDashboard()"
+            >
+                <option value="">All Meetings</option>
+                <option value="awaiting_confirmation">
+                    Awaiting Confirmation
+                </option>
+                <option value="booked">
+                    Booked
+                </option>
+                <option value="cancelled">
+                    Cancelled
+                </option>
+            </select>
+        
+        </div>
+    
+        <div class="table-container">
+    
+            <table>
+    
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Customer</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Status</th>
+                        <th>Calendar Event</th>
+                    </tr>
+                </thead>
+    
+                <tbody id="meetingTable"></tbody>
+    
+            </table>
+    
+        </div>
+    
+    </div>
+
 </div>
 
-<script>
-
-async function apiRequest(endpoint, apiKey) {
-
-    const response = await fetch(endpoint, {
-
-        headers: {
-            "X-Admin-Key": apiKey
-        }
-
-    });
-
-    if (!response.ok) {
-        throw new Error("Authentication failed");
-    }
-
-    return await response.json();
-}
-
-
-async function loadDashboard() {
-
-const apiKey = document.getElementById("apiKey").value;
-
-if (!apiKey) {
-    alert("Please enter the admin API key.");
-    return;
-}
-
-try {
-
-    const stats = await apiRequest(
-        "/admin/stats",
-        apiKey
-    );
-
-    document.getElementById("customers").textContent =
-        stats.customers;
-
-    document.getElementById("leads").textContent =
-        stats.leads;
-
-    document.getElementById("issues").textContent =
-        stats.open_issues;
-
-    document.getElementById("meetings").textContent =
-        stats.booked_meetings;
-
-    document.getElementById("pending").textContent =
-        stats.pending_meetings;
-
-        const customers = await apiRequest(
-    "/admin/customers",
-    apiKey
-);
-
-const customerTable =
-    document.getElementById("customerTable");
-
-customerTable.innerHTML = "";
-
-customers.customers.forEach(customer => {
-
-    customerTable.innerHTML += `
-        <tr>
-
-            <td>${customer.id}</td>
-
-            <td>${customer.sender}</td>
-
-            <td>
-                <input
-                    id="customer-name-${customer.id}"
-                    value="${customer.name || ""}"
-                >
-            </td>
-
-            <td>
-                <input
-                    id="customer-email-${customer.id}"
-                    value="${customer.email || ""}"
-                >
-            </td>
-
-            <td>${customer.created_at || "-"}</td>
-
-            <td>${customer.last_interaction || "-"}</td>
-
-            <td>
-                <button
-                    onclick="updateCustomer(${customer.id})"
-                >
-                    Save
-                </button>
-            </td>
-
-        </tr>
-    `;
-
-});
-
-
-    const leads = await apiRequest(
-        "/admin/leads",
-        apiKey
-    );
-
-    const leadTable =
-        document.getElementById("leadTable");
-
-    leadTable.innerHTML = "";
-
-    leads.leads.slice(-10).reverse().forEach(lead => {
-
-        leadTable.innerHTML += `
-            <tr>
-                <td>${lead.id}</td>
-                <td>${lead.sender}</td>
-                <td>${lead.requirement}</td>
-
-                <td>
-                    <select
-                        onchange="updateLead(${lead.id}, null, this.value)"
-                    >
-                        <option value="normal"
-                            ${lead.priority === "normal" ? "selected" : ""}>
-                            Normal
-                        </option>
-
-                        <option value="high"
-                            ${lead.priority === "high" ? "selected" : ""}>
-                            High
-                        </option>
-
-                        <option value="urgent"
-                            ${lead.priority === "urgent" ? "selected" : ""}>
-                            Urgent
-                        </option>
-                    </select>
-                </td>
-
-                <td>
-                    <select
-                        onchange="updateLead(${lead.id}, this.value, null)"
-                    >
-                        <option value="new"
-                            ${lead.status === "new" ? "selected" : ""}>
-                            New
-                        </option>
-
-                        <option value="contacted"
-                            ${lead.status === "contacted" ? "selected" : ""}>
-                            Contacted
-                        </option>
-
-                        <option value="qualified"
-                            ${lead.status === "qualified" ? "selected" : ""}>
-                            Qualified
-                        </option>
-
-                        <option value="demo_requested"
-                            ${lead.status === "demo_requested" ? "selected" : ""}>
-                            Demo Requested
-                        </option>
-
-                        <option value="converted"
-                            ${lead.status === "converted" ? "selected" : ""}>
-                            Converted
-                        </option>
-
-                        <option value="lost"
-                            ${lead.status === "lost" ? "selected" : ""}>
-                            Lost
-                        </option>
-                    </select>
-                </td>
-            </tr>
-        `;
-
-    });
-
-
-    const issueStatus =
-    document.getElementById("issueStatusFilter").value;
-
-const issueEndpoint = issueStatus
-    ? `/admin/issues?status=${encodeURIComponent(issueStatus)}`
-    : "/admin/issues";
-
-const issues = await apiRequest(
-    issueEndpoint,
-    apiKey
-);
-
-    const issueTable =
-        document.getElementById("issueTable");
-
-    issueTable.innerHTML = "";
-
-    issues.issues.forEach(issue => {
-
-        issueTable.innerHTML += `
-    <tr>
-        <td>${issue.id}</td>
-        <td>${issue.sender}</td>
-        <td>${issue.description}</td>
-
-        <td>
-            <select
-                onchange="updateIssue(${issue.id}, null, this.value)"
-            >
-                <option value="normal"
-                    ${issue.priority === "normal" ? "selected" : ""}>
-                    Normal
-                </option>
-
-                <option value="high"
-                    ${issue.priority === "high" ? "selected" : ""}>
-                    High
-                </option>
-
-                <option value="urgent"
-                    ${issue.priority === "urgent" ? "selected" : ""}>
-                    Urgent
-                </option>
-            </select>
-        </td>
-
-        <td>
-            <select
-                onchange="updateIssue(${issue.id}, this.value, null)"
-            >
-                <option value="open"
-                    ${issue.status === "open" ? "selected" : ""}>
-                    Open
-                </option>
-
-                <option value="in_progress"
-                    ${issue.status === "in_progress" ? "selected" : ""}>
-                    In Progress
-                </option>
-
-                <option value="resolved"
-                    ${issue.status === "resolved" ? "selected" : ""}>
-                    Resolved
-                </option>
-            </select>
-        </td>
-    </tr>
-`;
-
-    });
-
-} catch (error) {
-
-    alert(
-        "Unable to load dashboard. Check your API key."
-    );
-
-}
-
-}
-
-async function updateLead(leadId, status = null, priority = null) {
-
-const apiKey = document.getElementById("apiKey").value;
-
-try {
-
-    const params = new URLSearchParams();
-
-    if (status) {
-        params.append("status", status);
-    }
-
-    if (priority) {
-        params.append("priority", priority);
-    }
-
-    const response = await fetch(
-        `/admin/leads/${leadId}?${params.toString()}`,
-        {
-            method: "PATCH",
-            headers: {
-                "X-Admin-Key": apiKey
-            }
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to update lead");
-    }
-
-    loadDashboard();
-
-} catch (error) {
-
-    alert(
-        "Unable to update lead. Check your admin API key."
-    );
-
-}
-}
-
-async function updateIssue(issueId, status = null, priority = null) {
-
-const apiKey = document.getElementById("apiKey").value;
-
-try {
-
-    const params = new URLSearchParams();
-
-    if (status) {
-        params.append("status", status);
-    }
-
-    if (priority) {
-        params.append("priority", priority);
-    }
-
-    const response = await fetch(
-        `/admin/issues/${issueId}?${params.toString()}`,
-        {
-            method: "PATCH",
-            headers: {
-                "X-Admin-Key": apiKey
-            }
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to update issue");
-    }
-
-    loadDashboard();
-
-} catch (error) {
-
-    alert(
-        "Unable to update issue. Check your admin API key."
-    );
-
-}
-}
-
-async function updateCustomer(customerId) {
-
-const apiKey =
-    document.getElementById("apiKey").value;
-
-const name =
-    document.getElementById(
-        `customer-name-${customerId}`
-    ).value;
-
-const email =
-    document.getElementById(
-        `customer-email-${customerId}`
-    ).value;
-
-try {
-
-    const params = new URLSearchParams();
-
-    params.append("name", name);
-    params.append("email", email);
-
-    const response = await fetch(
-        `/admin/customers/${customerId}?${params.toString()}`,
-        {
-            method: "PATCH",
-            headers: {
-                "X-Admin-Key": apiKey
-            }
-        }
-    );
-
-    if (!response.ok) {
-    throw new Error("Failed to update customer");
-}
-
-alert("✅ Customer updated successfully!");
-
-loadDashboard();
-
-} catch (error) {
-
-    alert(
-        "Unable to update customer."
-    );
-
-}
-}
-</script>
-
+<script src="/static/js/admin.js"></script>
 </body>
 </html>
+
+

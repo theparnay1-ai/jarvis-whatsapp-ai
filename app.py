@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, Request, Header, HTTPException, Depends
 from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from fastapi import Query
 from client import should_reply
@@ -35,6 +36,7 @@ app = FastAPI(
     version="2.0.0"
 )
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
 def admin_dashboard():
 
@@ -464,12 +466,20 @@ def get_admin_issues(
     description="Retrieve customer meeting requests and their booking status."
 )
 def get_admin_meetings(
-    _: bool = Depends(verify_admin_key)
+    _: bool = Depends(verify_admin_key),
+    status: str = None
 ):
 
     db = SessionLocal()
 
-    meetings = db.query(Meeting).all()
+    query = db.query(Meeting)
+
+    if status:
+        query = query.filter(
+            Meeting.status == status
+        )
+
+    meetings = query.all()
 
     result = []
 
@@ -490,6 +500,51 @@ def get_admin_meetings(
     return {
         "count": len(result),
         "meetings": result
+    }
+
+@app.patch(
+    "/admin/meetings/{meeting_id}",
+    tags=["Admin"],
+    summary="Update a meeting",
+    description="Update the status of an existing customer meeting."
+)
+def update_admin_meeting(
+    meeting_id: int,
+    status: str = None,
+    _: bool = Depends(verify_admin_key)
+):
+
+    db = SessionLocal()
+
+    meeting = db.query(Meeting).filter(
+        Meeting.id == meeting_id
+    ).first()
+
+    if not meeting:
+        db.close()
+
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    if status:
+        meeting.status = status
+
+    db.commit()
+    db.refresh(meeting)
+    db.close()
+
+    return {
+        "success": True,
+        "meeting": {
+            "id": meeting.id,
+            "sender": meeting.sender,
+            "requested_start": meeting.requested_start,
+            "requested_end": meeting.requested_end,
+            "status": meeting.status,
+            "calendar_event_id": meeting.calendar_event_id
+        }
     }
 
 @app.get(
@@ -581,5 +636,50 @@ def update_admin_issue(
             "priority": issue.priority,
             "status": issue.status,
             "created_at": issue.created_at
+        }
+    }
+
+@app.patch(
+    "/admin/meetings/{meeting_id}",
+    tags=["Admin"],
+    summary="Update a meeting",
+    description="Update the status of an existing customer meeting."
+)
+def update_admin_meeting(
+    meeting_id: int,
+    status: str = None,
+    _: bool = Depends(verify_admin_key)
+):
+
+    db = SessionLocal()
+
+    meeting = db.query(Meeting).filter(
+        Meeting.id == meeting_id
+    ).first()
+
+    if not meeting:
+        db.close()
+
+        raise HTTPException(
+            status_code=404,
+            detail="Meeting not found"
+        )
+
+    if status:
+        meeting.status = status
+
+    db.commit()
+    db.refresh(meeting)
+    db.close()
+
+    return {
+        "success": True,
+        "meeting": {
+            "id": meeting.id,
+            "sender": meeting.sender,
+            "requested_start": meeting.requested_start,
+            "requested_end": meeting.requested_end,
+            "status": meeting.status,
+            "calendar_event_id": meeting.calendar_event_id
         }
     }
