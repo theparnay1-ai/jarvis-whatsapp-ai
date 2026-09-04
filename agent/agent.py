@@ -488,17 +488,19 @@ def process_message(business_id,sender, message):
 
             if not customer:
                 create_customer(
-                    sender=sender,
-                    name=name,
-                    email=email
-                )
+    business_id=business_id,
+    sender=sender,
+    name=name,
+    email=email
+)
 
             else:
                 update_customer(
-                    sender=sender,
-                    name=name,
-                    email=email
-                )
+    business_id=business_id,
+    sender=sender,
+    name=name,
+    email=email
+)
 
         if any(word in message_lower for word in [
             "demo",
