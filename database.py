@@ -1,4 +1,14 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    Boolean,
+    ForeignKey,
+    UniqueConstraint
+)
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 
@@ -18,16 +28,74 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+# ==============================
+# SaaS MULTI-TENANT FOUNDATION
+# ==============================
+
+class Plan(Base):
+    __tablename__ = "plans"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    description = Column(Text)
+    price_monthly = Column(Integer, default=0)
+    max_customers = Column(Integer, default=100)
+    max_messages = Column(Integer, default=1000)
+
+
+class Business(Base):
+    __tablename__ = "businesses"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    industry = Column(String)
+    description = Column(Text)
+    email = Column(String)
+    phone = Column(String)
+    timezone = Column(String, default="Asia/Kolkata")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("plans.id"), nullable=False)
+    status = Column(String, default="active")
+    started_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
+
+
+class BusinessUser(Base):
+    __tablename__ = "business_users"
+
+    id = Column(Integer, primary_key=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, default="owner")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Message(Base):
 
     __tablename__ = "messages"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    whatsapp_message_id = Column(
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
+        index=True
+    )
+
+    sender = Column(
         String,
-        unique=True,
         index=True
     )
 
@@ -70,6 +138,7 @@ def message_exists(message_id):
 
 
 def save_message(
+    business_id,
     message_id,
     sender,
     text,
@@ -79,6 +148,7 @@ def save_message(
     db = SessionLocal()
 
     message = Message(
+        business_id=business_id,
         whatsapp_message_id=message_id,
         sender=sender,
         message=text,
@@ -94,11 +164,16 @@ def save_message(
     return message
 
 
-def save_response(message_id, response):
+def save_response(
+    business_id,
+    message_id,
+    response
+):
 
     db = SessionLocal()
 
     message = db.query(Message).filter(
+        Message.business_id == business_id,
         Message.whatsapp_message_id == message_id
     ).first()
 
@@ -111,13 +186,20 @@ def save_response(message_id, response):
 
     db.close()
 
-def get_recent_messages(sender, limit=10):
+def get_recent_messages(
+    business_id,
+    sender,
+    limit=10
+):
 
     db = SessionLocal()
 
     messages = (
         db.query(Message)
-        .filter(Message.sender == sender)
+        .filter(
+            Message.business_id == business_id,
+            Message.sender == sender
+        )
         .order_by(Message.timestamp.desc())
         .limit(limit)
         .all()
@@ -133,6 +215,13 @@ class Memory(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
+        index=True
+    )
+
     sender = Column(
         String,
         index=True
@@ -145,11 +234,12 @@ class Memory(Base):
         default=datetime.utcnow
     )
 
-def save_memory(sender, memory_text):
+def save_memory(business_id, sender, memory_text):
 
     db = SessionLocal()
 
     memory = Memory(
+        business_id=business_id,
         sender=sender,
         memory=memory_text
     )
@@ -162,13 +252,16 @@ def save_memory(sender, memory_text):
 
     return memory
 
-def get_memories(sender):
+def get_memories(business_id, sender):
 
     db = SessionLocal()
 
     memories = (
         db.query(Memory)
-        .filter(Memory.sender == sender)
+        .filter(
+            Memory.business_id == business_id,
+            Memory.sender == sender
+        )
         .order_by(Memory.created_at.asc())
         .all()
     )
@@ -179,13 +272,14 @@ def get_memories(sender):
 
 Base.metadata.create_all(bind=engine)
 
-def update_memory(memory_id, new_memory):
+def update_memory(business_id, memory_id, new_memory):
 
     db = SessionLocal()
 
     memory = db.query(Memory).filter(
-        Memory.id == memory_id
-    ).first()
+    Memory.business_id == business_id,
+    Memory.id == memory_id
+).first()
 
     if memory:
 
@@ -205,6 +299,13 @@ class Issue(Base):
     id = Column(
         Integer,
         primary_key=True,
+        index=True
+    )
+
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
         index=True
     )
 
@@ -233,6 +334,7 @@ class Issue(Base):
     )
 
 def create_issue(
+    business_id,
     sender,
     description,
     priority="normal"
@@ -241,11 +343,12 @@ def create_issue(
     db = SessionLocal()
 
     issue = Issue(
-        sender=sender,
-        description=description,
-        priority=priority,
-        status="open"
-    )
+    business_id=business_id,
+    sender=sender,
+    description=description,
+    priority=priority,
+    status="open"
+)
 
     db.add(issue)
     db.commit()
@@ -255,11 +358,12 @@ def create_issue(
 
     return issue
 
-def get_issue(issue_id):
+def get_issue(business_id, issue_id):
 
     db = SessionLocal()
 
     issue = db.query(Issue).filter(
+        Issue.business_id == business_id,
         Issue.id == issue_id
     ).first()
 
@@ -268,6 +372,7 @@ def get_issue(issue_id):
     return issue
 
 def update_issue(
+    business_id,
     issue_id,
     status=None,
     priority=None
@@ -276,8 +381,9 @@ def update_issue(
     db = SessionLocal()
 
     issue = db.query(Issue).filter(
-        Issue.id == issue_id
-    ).first()
+    Issue.business_id == business_id,
+    Issue.id == issue_id
+).first()
 
     if issue:
 
@@ -301,6 +407,13 @@ class Lead(Base):
     id = Column(
         Integer,
         primary_key=True,
+        index=True
+    )
+
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
         index=True
     )
 
@@ -329,6 +442,7 @@ class Lead(Base):
     )
 
 def create_lead(
+    business_id,
     sender,
     requirement,
     priority="normal"
@@ -337,11 +451,12 @@ def create_lead(
     db = SessionLocal()
 
     lead = Lead(
-        sender=sender,
-        requirement=requirement,
-        priority=priority,
-        status="new"
-    )
+    business_id=business_id,
+    sender=sender,
+    requirement=requirement,
+    priority=priority,
+    status="new"
+)
 
     db.add(lead)
     db.commit()
@@ -351,19 +466,21 @@ def create_lead(
 
     return lead
 
-def get_lead(lead_id):
+def get_lead(business_id, lead_id):
 
     db = SessionLocal()
 
     lead = db.query(Lead).filter(
-        Lead.id == lead_id
-    ).first()
+    Lead.business_id == business_id,
+    Lead.id == lead_id
+).first()
 
     db.close()
 
     return lead
 
 def update_lead(
+    business_id,
     lead_id,
     status=None,
     priority=None
@@ -372,8 +489,9 @@ def update_lead(
     db = SessionLocal()
 
     lead = db.query(Lead).filter(
-        Lead.id == lead_id
-    ).first()
+    Lead.business_id == business_id,
+    Lead.id == lead_id
+).first()
 
     if lead:
 
@@ -397,6 +515,13 @@ class Meeting(Base):
     id = Column(
         Integer,
         primary_key=True,
+        index=True
+    )
+
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
         index=True
     )
 
@@ -434,6 +559,7 @@ class Meeting(Base):
     )
 
 def create_meeting_request(
+    business_id,
     sender,
     requested_start,
     requested_end,
@@ -443,6 +569,7 @@ def create_meeting_request(
     db = SessionLocal()
 
     meeting = Meeting(
+        business_id=business_id,
         sender=sender,
         requested_start=requested_start,
         requested_end=requested_end,
@@ -458,24 +585,8 @@ def create_meeting_request(
 
     return meeting
 
-    db = SessionLocal()
-
-    meeting = Meeting(
-        sender=sender,
-        requested_start=requested_start,
-        requested_end=requested_end,
-        status="awaiting_confirmation"
-    )
-
-    db.add(meeting)
-    db.commit()
-    db.refresh(meeting)
-
-    db.close()
-
-    return meeting
-
 def update_meeting(
+    business_id,
     meeting_id,
     status=None,
     calendar_event_id=None
@@ -484,8 +595,9 @@ def update_meeting(
     db = SessionLocal()
 
     meeting = db.query(Meeting).filter(
-        Meeting.id == meeting_id
-    ).first()
+    Meeting.business_id == business_id,
+    Meeting.id == meeting_id
+).first()
 
     if meeting:
 
@@ -502,19 +614,23 @@ def update_meeting(
 
     return meeting
 
-def get_pending_meeting(sender):
+def get_pending_meeting(
+    business_id,
+    sender
+):
 
     db = SessionLocal()
 
     meeting = (
-        db.query(Meeting)
-        .filter(
-            Meeting.sender == sender,
-            Meeting.status == "awaiting_confirmation"
-        )
-        .order_by(Meeting.created_at.desc())
-        .first()
+    db.query(Meeting)
+    .filter(
+        Meeting.business_id == business_id,
+        Meeting.sender == sender,
+        Meeting.status == "awaiting_confirmation"
     )
+    .order_by(Meeting.created_at.desc())
+    .first()
+)
 
     db.close()
 
@@ -524,17 +640,31 @@ class Customer(Base):
 
     __tablename__ = "customers"
 
+    __table_args__ = (
+    UniqueConstraint(
+        "business_id",
+        "sender",
+        name="uq_customer_business_sender"
+    ),
+)
+
     id = Column(
         Integer,
         primary_key=True,
         index=True
     )
 
-    sender = Column(
-        String,
-        unique=True,
+    business_id = Column(
+        Integer,
+        ForeignKey("businesses.id"),
+        nullable=True,
         index=True
     )
+
+    sender = Column(
+    String,
+    index=True
+)
 
     name = Column(
         String,
@@ -558,15 +688,21 @@ class Customer(Base):
 
 Base.metadata.create_all(bind=engine)
 
-def create_customer(sender, name=None, email=None):
+def create_customer(
+    business_id,
+    sender,
+    name=None,
+    email=None
+):
 
     db = SessionLocal()
 
     customer = Customer(
-        sender=sender,
-        name=name,
-        email=email
-    )
+    business_id=business_id,
+    sender=sender,
+    name=name,
+    email=email
+)
 
     db.add(customer)
     db.commit()
@@ -577,29 +713,43 @@ def create_customer(sender, name=None, email=None):
     return customer
 
 
-def get_customer(sender):
+def get_customer(
+    business_id,
+    sender
+):
 
     db = SessionLocal()
 
     customer = (
-        db.query(Customer)
-        .filter(Customer.sender == sender)
-        .first()
+    db.query(Customer)
+    .filter(
+        Customer.business_id == business_id,
+        Customer.sender == sender
     )
+    .first()
+)
 
     db.close()
 
     return customer
 
-def update_customer(sender, name=None, email=None):
+def update_customer(
+    business_id,
+    sender,
+    name=None,
+    email=None
+):
 
     db = SessionLocal()
 
     customer = (
-        db.query(Customer)
-        .filter(Customer.sender == sender)
-        .first()
+    db.query(Customer)
+    .filter(
+        Customer.business_id == business_id,
+        Customer.sender == sender
     )
+    .first()
+)
 
     if customer:
 

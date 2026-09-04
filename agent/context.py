@@ -4,7 +4,9 @@ from database import (
 )
 
 
-def get_customer_context(sender, message_limit=10):
+def get_customer_context(
+        business_id,
+        sender, message_limit=10):
     """
     Retrieve recent conversation history and long-term
     memories for a WhatsApp customer.
@@ -15,7 +17,9 @@ def get_customer_context(sender, message_limit=10):
         limit=message_limit
     )
 
-    memories = get_memories(sender)
+    memories = get_memories(
+                    business_id,
+                    sender)
 
     conversation_history = []
 

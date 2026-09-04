@@ -6,7 +6,7 @@ from database import (
 )
 
 
-def process_memory(sender, message):
+def process_memory(business_id, sender, message):
     """
     Extract and manage long-term memory for a user.
     """
@@ -18,15 +18,19 @@ def process_memory(sender, message):
         return None
 
     # Get existing memories
-    existing_memories = get_memories(sender)
+    existing_memories = get_memories(
+    business_id,
+    sender
+)
 
     # If there are no existing memories, create a new one
     if not existing_memories:
 
         save_memory(
-            sender,
-            memory
-        )
+    business_id,
+    sender,
+    memory
+)
 
         print("New memory saved:", memory)
 
@@ -141,9 +145,10 @@ New memory:
     if action == "UPDATE" and memory_id:
 
         updated = update_memory(
-            memory_id,
-            memory
-        )
+    business_id,
+    memory_id,
+    memory
+)
 
         if updated:
 

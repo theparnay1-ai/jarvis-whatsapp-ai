@@ -23,6 +23,8 @@ from database import (
     Meeting
 )
 
+business_id = 1
+
 load_dotenv()
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
 
@@ -138,6 +140,7 @@ async def receive_webhook(request: Request):
         print("Message saved to database.")
 
         process_memory(
+                business_id,
                 sender,
                 text
             )       
@@ -165,7 +168,9 @@ async def receive_webhook(request: Request):
             limit=10
         )
 
-        long_term_memories = get_memories(sender)
+        long_term_memories = get_memories(
+            business_id,
+            sender)
         memory_context = []
 
         for memory in long_term_memories:
@@ -185,6 +190,7 @@ async def receive_webhook(request: Request):
         # Generate AI response
         # Process message through the AI agent
         agent_result = process_message(
+            business_id,
             sender,
             text
         )

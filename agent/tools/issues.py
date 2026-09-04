@@ -6,6 +6,7 @@ from database import (
 
 
 def create_customer_issue(
+    business_id,
     sender,
     description,
     priority="normal"
@@ -15,10 +16,11 @@ def create_customer_issue(
     """
 
     issue = create_issue(
-        sender,
-        description,
-        priority
-    )
+    business_id,
+    sender,
+    description,
+    priority
+)
 
     return {
         "success": True,
@@ -29,12 +31,18 @@ def create_customer_issue(
     }
 
 
-def get_customer_issue(issue_id):
+def get_customer_issue(
+    business_id,
+    issue_id
+):
     """
     Retrieve an existing customer issue.
     """
 
-    issue = get_issue(issue_id)
+    issue = get_issue(
+    business_id,
+    issue_id
+)
 
     if not issue:
 
@@ -53,6 +61,7 @@ def get_customer_issue(issue_id):
 
 
 def update_customer_issue(
+    business_id,
     issue_id,
     status=None,
     priority=None
@@ -62,10 +71,11 @@ def update_customer_issue(
     """
 
     issue = update_issue(
-        issue_id,
-        status=status,
-        priority=priority
-    )
+    business_id,
+    issue_id,
+    status=status,
+    priority=priority
+)
 
     if not issue:
 

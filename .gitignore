@@ -6,9 +6,10 @@
 __pycache__/
 *.pyc
 
-# Local database
-chatbot.db
-chatbot_backup.db
+# Local databases and backups
+*.db
+*.sqlite
+*.sqlite3
 
 # Local test files
 test.py

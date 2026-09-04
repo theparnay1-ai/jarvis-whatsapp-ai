@@ -55,7 +55,11 @@ def is_meeting_confirmation(message):
         for phrase in confirmation_phrases
     )
 
-def handle_meeting_selection(sender, message):
+def handle_meeting_selection(
+    business_id,
+    sender,
+    message
+):
     """
     Handle a customer selecting one of the meeting
     alternatives previously offered.
@@ -82,10 +86,11 @@ def handle_meeting_selection(sender, message):
         return None
 
     meeting = create_pending_meeting_from_slot(
-        sender=sender,
-        start_time=selected_slot["start"],
-        end_time=selected_slot["end"]
-    )
+    business_id=business_id,
+    sender=sender,
+    start_time=selected_slot["start"],
+    end_time=selected_slot["end"]
+)
 
     return {
         "success": True,
@@ -151,13 +156,16 @@ Rules:
     except Exception:
         return None
 
-def process_message(sender, message):
+def process_message(business_id,sender, message):
     """
     Process an incoming customer message through the AI agent.
     """
 
         # Ensure customer profile exists and update last interaction
-    customer = get_customer(sender)
+    customer = get_customer(
+    business_id,
+    sender
+)
 
     if not customer:
         create_customer(sender)
@@ -165,11 +173,17 @@ def process_message(sender, message):
         update_customer(sender)
 
     # Get customer context
-    context = get_customer_context(sender)
+    context = get_customer_context(
+    business_id,
+    sender
+)
 
         # Check whether the customer selected
     # one of the previously offered alternatives
-    pending = get_pending_customer_meeting(sender)
+    pending = get_pending_customer_meeting(
+    business_id,
+    sender
+)
 
     if pending["success"] and pending.get("alternatives"):
 
@@ -193,16 +207,18 @@ def process_message(sender, message):
             from database import update_meeting
 
             update_meeting(
-                pending["meeting_id"],
-                status="cancelled"
-            )
+    business_id,
+    pending["meeting_id"],
+    status="cancelled"
+)
 
             # Store the customer's selected slot
             new_meeting = create_pending_meeting_from_slot(
-                sender=sender,
-                start_time=selected_slot["start"],
-                end_time=selected_slot["end"]
-            )
+    business_id=business_id,
+    sender=sender,
+    start_time=selected_slot["start"],
+    end_time=selected_slot["end"]
+)
 
             return {
                 "sender": sender,
@@ -223,14 +239,16 @@ def process_message(sender, message):
     if is_meeting_confirmation(message):
 
         pending_meeting = get_pending_customer_meeting(
-            sender
-        )
+    business_id,
+    sender
+)
 
         if pending_meeting["success"]:
 
             booking = confirm_and_book_meeting(
-                sender=sender,
-                summary="Meeting with customer",
+    business_id=business_id,
+    sender=sender,
+    summary="Meeting with customer",
                 description=(
                     f"Meeting booked through WhatsApp "
                     f"for customer {sender}"
@@ -324,10 +342,11 @@ def process_message(sender, message):
         if meeting_check["available"]:
 
             pending_meeting = create_pending_meeting(
-                sender=sender,
-                start_time=start_time,
-                end_time=end_time
-            )
+    business_id=business_id,
+    sender=sender,
+    start_time=start_time,
+    end_time=end_time
+)
 
             formatted_time = requested_datetime.strftime(
                 "%I:%M %p"
@@ -373,11 +392,12 @@ def process_message(sender, message):
             }
 
         pending_meeting = create_pending_meeting(
-            sender=sender,
-            start_time=start_time,
-            end_time=end_time,
-            alternative_slots=available_slots
-        )
+    business_id=business_id,
+    sender=sender,
+    start_time=start_time,
+    end_time=end_time,
+    alternative_slots=available_slots
+)
 
         formatted_date = requested_datetime.strftime(
             "%B %d, %Y"
@@ -414,10 +434,11 @@ def process_message(sender, message):
         action = "create_issue"
 
         issue = create_customer_issue(
-            sender=sender,
-            description=message,
-            priority=priority
-        )
+    business_id=business_id,
+    sender=sender,
+    description=message,
+    priority=priority
+)
 
         requires_owner = True
 
@@ -432,7 +453,10 @@ def process_message(sender, message):
 
     elif intent == "lead":
 
-        existing_lead = get_customer_lead_by_sender(sender)
+        existing_lead = get_customer_lead_by_sender(
+    business_id,
+    sender
+)
 
         # Determine lead status from the customer's message
         message_lower = message.lower()
@@ -502,11 +526,12 @@ def process_message(sender, message):
             action = "update_lead"
 
             lead = update_customer_lead(
-                lead_id=existing_lead["lead_id"],
-                status=lead_status,
-                priority=priority,
-                requirement=message
-            )
+    business_id=business_id,
+    lead_id=existing_lead["lead_id"],
+    status=lead_status,
+    priority=priority,
+    requirement=message
+)
 
         # New customer → create lead
         else:
@@ -514,18 +539,20 @@ def process_message(sender, message):
             action = "create_lead"
 
             lead = create_customer_lead(
-                sender=sender,
-                requirement=message,
-                priority=priority
-            )
+    business_id=business_id,
+    sender=sender,
+    requirement=message,
+    priority=priority
+)
 
             # Update status if needed
             if lead_status != "new":
 
                 lead = update_customer_lead(
-                    lead_id=lead["lead_id"],
-                    status=lead_status
-                )
+    business_id=business_id,
+    lead_id=lead["lead_id"],
+    status=lead_status
+)
 
     elif intent == "payment":
         action = "handle_payment"

@@ -116,10 +116,11 @@ def book_meeting(
     )
 
 def create_pending_meeting(
+    business_id,
     sender,
     start_time,
     end_time,
-    alternative_slots= None
+    alternative_slots=None
 ):
     """
     Store a meeting proposal that is waiting
@@ -130,6 +131,7 @@ def create_pending_meeting(
     end = datetime.fromisoformat(end_time)
 
     meeting = create_meeting_request(
+    business_id=business_id,
     sender=sender,
     requested_start=start,
     requested_end=end,
@@ -148,7 +150,10 @@ def create_pending_meeting(
     }
 
 
-def get_pending_customer_meeting(sender):
+def get_pending_customer_meeting(
+    business_id,
+    sender
+):
     """
     Get the latest meeting waiting for confirmation,
     including its alternative slots.
@@ -156,7 +161,10 @@ def get_pending_customer_meeting(sender):
 
     import json
 
-    meeting = get_pending_meeting(sender)
+    meeting = get_pending_meeting(
+    business_id,
+    sender
+)
 
     if not meeting:
         return {
@@ -184,6 +192,7 @@ def get_pending_customer_meeting(sender):
     }
 
 def create_pending_meeting_from_slot(
+    business_id,
     sender,
     start_time,
     end_time
@@ -194,13 +203,15 @@ def create_pending_meeting_from_slot(
     """
 
     return create_pending_meeting(
-        sender=sender,
-        start_time=start_time,
-        end_time=end_time
-    )
+    business_id=business_id,
+    sender=sender,
+    start_time=start_time,
+    end_time=end_time
+)
 
 
 def confirm_meeting(
+    business_id,
     meeting_id,
     calendar_event_id
 ):
@@ -210,10 +221,11 @@ def confirm_meeting(
     """
 
     meeting = update_meeting(
-        meeting_id,
-        status="booked",
-        calendar_event_id=calendar_event_id
-    )
+    business_id,
+    meeting_id,
+    status="booked",
+    calendar_event_id=calendar_event_id
+)
 
     if not meeting:
 
@@ -230,6 +242,7 @@ def confirm_meeting(
     }
 
 def confirm_and_book_meeting(
+    business_id,
     sender,
     summary,
     description=None,
@@ -240,7 +253,10 @@ def confirm_and_book_meeting(
     only if the requested slot is still available.
     """
 
-    meeting = get_pending_meeting(sender)
+    meeting = get_pending_meeting(
+    business_id,
+    sender
+)
 
     if not meeting:
         return {
@@ -280,10 +296,11 @@ def confirm_and_book_meeting(
 
     # Mark meeting as booked
     updated_meeting = update_meeting(
-        meeting.id,
-        status="booked",
-        calendar_event_id=calendar_result["event_id"]
-    )
+    business_id,
+    meeting.id,
+    status="booked",
+    calendar_event_id=calendar_result["event_id"]
+)
 
     return {
         "success": True,

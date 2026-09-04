@@ -8,6 +8,7 @@ from database import (
 
 
 def create_customer_lead(
+    business_id,
     sender,
     requirement,
     priority="normal"
@@ -17,10 +18,11 @@ def create_customer_lead(
     """
 
     lead = create_lead(
-        sender,
-        requirement,
-        priority
-    )
+    business_id,
+    sender,
+    requirement,
+    priority
+)
 
     return {
         "success": True,
@@ -31,12 +33,18 @@ def create_customer_lead(
     }
 
 
-def get_customer_lead(lead_id):
+def get_customer_lead(
+    business_id,
+    lead_id
+):
     """
     Retrieve an existing lead.
     """
 
-    lead = get_lead(lead_id)
+    lead = get_lead(
+    business_id,
+    lead_id
+)
 
     if not lead:
         return {
@@ -54,6 +62,7 @@ def get_customer_lead(lead_id):
 
 
 def update_customer_lead(
+    business_id,
     lead_id,
     status=None,
     priority=None,
@@ -64,10 +73,11 @@ def update_customer_lead(
     """
 
     lead = update_lead(
-        lead_id,
-        status=status,
-        priority=priority
-    )
+    business_id,
+    lead_id,
+    status=status,
+    priority=priority
+)
 
     if status:
         lead.status = status
@@ -92,7 +102,10 @@ def update_customer_lead(
         "requirement": lead.requirement
     }
 
-def get_customer_lead_by_sender(sender):
+def get_customer_lead_by_sender(
+    business_id,
+    sender
+):
     """
     Retrieve the most recent lead for a WhatsApp customer.
     """
@@ -100,11 +113,14 @@ def get_customer_lead_by_sender(sender):
     db = SessionLocal()
 
     lead = (
-        db.query(Lead)
-        .filter(Lead.sender == sender)
-        .order_by(Lead.created_at.desc())
-        .first()
+    db.query(Lead)
+    .filter(
+        Lead.business_id == business_id,
+        Lead.sender == sender
     )
+    .order_by(Lead.created_at.desc())
+    .first()
+)
 
     db.close()
 
