@@ -99,8 +99,6 @@ class Message(Base):
         index=True
     )
 
-    sender = Column(String, index=True)
-
     message = Column(Text)
 
     direction = Column(String)
@@ -483,7 +481,8 @@ def update_lead(
     business_id,
     lead_id,
     status=None,
-    priority=None
+    priority=None,
+    requirement=None
 ):
 
     db = SessionLocal()
@@ -495,11 +494,14 @@ def update_lead(
 
     if lead:
 
-        if status:
+        if status is not None:
             lead.status = status
 
-        if priority:
+        if priority is not None:
             lead.priority = priority
+
+        if requirement is not None:
+            lead.requirement = requirement
 
         db.commit()
         db.refresh(lead)
