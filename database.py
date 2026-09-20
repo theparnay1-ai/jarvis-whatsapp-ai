@@ -94,10 +94,17 @@ class Message(Base):
         index=True
     )
 
+    whatsapp_message_id = Column(
+    String,
+    unique=True,
+    index=True
+)
+
     sender = Column(
         String,
         index=True
     )
+    sender = Column(String, index=True)
 
     message = Column(Text)
 

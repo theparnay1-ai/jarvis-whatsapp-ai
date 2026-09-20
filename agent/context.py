@@ -13,6 +13,7 @@ def get_customer_context(
     """
 
     recent_messages = get_recent_messages(
+        business_id,
         sender,
         limit=message_limit
     )

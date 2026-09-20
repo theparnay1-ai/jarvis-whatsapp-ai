@@ -11,6 +11,12 @@ client = genai.Client(
 
 def should_reply(message):
 
+    text = message.lower().strip()
+
+    if text in {"tomorrow", "today", "tonight"} or "am" in text or "pm" in text:
+        return True
+
+
     prompt = f"""
 You are controlling an AI WhatsApp assistant.
 

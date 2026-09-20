@@ -168,9 +168,9 @@ def process_message(business_id,sender, message):
 )
 
     if not customer:
-        create_customer(sender)
+        create_customer(business_id, sender)
     else:
-        update_customer(sender)
+        update_customer(business_id, sender)
 
     # Get customer context
     context = get_customer_context(
@@ -484,7 +484,7 @@ def process_message(business_id,sender, message):
             # Update CRM profile
         if name or email:
 
-            customer = get_customer(sender)
+            customer = get_customer(business_id, sender)
 
             if not customer:
                 create_customer(
