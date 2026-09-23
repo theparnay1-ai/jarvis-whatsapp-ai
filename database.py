@@ -125,8 +125,33 @@ class Message(Base):
         nullable=True
     )
 
+class Knowledge(Base):
+    __tablename__ = "knowledge"
+
+    id = Column(Integer, primary_key=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), index=True)
+    title = Column(String)
+    content = Column(Text)
+    embedding = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
+
+def search_knowledge(business_id, message):
+    db = SessionLocal()
+    words = message.lower().split()
+
+    results = db.query(Knowledge).filter(
+        Knowledge.business_id == business_id
+    ).all()
+
+    matches = [
+        k.content for k in results
+        if any(word in k.content.lower() for word in words if len(word) > 2)
+    ]
+
+    db.close()
+    return matches[:5]
 
 
 def message_exists(message_id):

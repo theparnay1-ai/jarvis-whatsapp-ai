@@ -3,6 +3,7 @@ from agent.context import get_customer_context
 from agent.responder import generate_response
 from agent.tools.issues import create_customer_issue
 from agent.tools.notifications import create_owner_notification
+from rag import search_knowledge
 from agent.tools.leads import (
     create_customer_lead,
     get_customer_lead_by_sender,
@@ -113,7 +114,7 @@ Extract the meeting date and time from this customer message.
 Customer message:
 {message}
 
-Today's date is 2026-08-26.
+Today's date is {datetime.now().strftime("%Y-%m-%d")}.
 
 Return ONLY valid JSON in this exact format:
 
@@ -177,7 +178,6 @@ def process_message(business_id,sender, message):
     business_id,
     sender
 )
-
         # Check whether the customer selected
     # one of the previously offered alternatives
     pending = get_pending_customer_meeting(
@@ -287,9 +287,14 @@ def process_message(business_id,sender, message):
         
 
     # Classify message
+    # Classify message
     classification = classify_message(message)
 
     intent = classification["intent"]
+
+    intent = classification["intent"]
+
+
     priority = classification["priority"]
     requires_owner = classification["requires_owner"]
 
@@ -566,12 +571,27 @@ def process_message(business_id,sender, message):
         action = "answer_general"
 
     # Generate customer response
+    # Generate customer response
+
+    retrieval_query = message
+
+    retrieval_query = message
+
+    if any(x in message.lower() for x in ["how much", "what price", "how much does it cost"]):
+        for item in reversed(context["conversation_history"]):
+            if any(x in item["message"].lower() for x in ["website", "web development", "app", "software", "service"]):
+                retrieval_query += " " + item["message"]
+                break
+
+    knowledge = search_knowledge(business_id, retrieval_query)
+
     response = generate_response(
-        message=message,
-        classification=classification,
-        conversation_history=context["conversation_history"],
-        memories=context["memories"]
-    )
+    message=message,
+    classification=classification,
+    conversation_history=context["conversation_history"][-3:],
+    memories=context["memories"],
+    knowledge=knowledge
+)
 
     return {
         "sender": sender,

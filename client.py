@@ -16,6 +16,13 @@ def should_reply(message):
     if text in {"tomorrow", "today", "tonight"} or "am" in text or "pm" in text:
         return True
 
+    if text.startswith((
+        "it should", "it must", "it needs",
+        "i also want", "i also need",
+        "and what about", "what about",
+        "how much", "how many"
+    )):
+        return True
 
     prompt = f"""
 You are controlling an AI WhatsApp assistant.

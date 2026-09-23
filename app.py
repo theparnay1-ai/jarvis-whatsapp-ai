@@ -21,12 +21,14 @@ from database import (
     Customer,
     Lead,
     Issue,
+    Knowledge,
     Meeting
 )
 import bcrypt
 from jose import jwt
 from datetime import timedelta
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from rag import add_knowledge, update_knowledge, delete_knowledge
 security = HTTPBearer()
 
 business_id = 1
@@ -34,7 +36,9 @@ business_id = 1
 load_dotenv()
 
 
-SECRET = os.getenv("JWT_SECRET", "change-this-secret")
+SECRET = os.getenv("JWT_SECRET")
+if not SECRET:
+    raise RuntimeError("JWT_SECRET is missing")
 
 app = FastAPI(
     title="AI WhatsApp Customer Management Agent",
@@ -265,6 +269,49 @@ def verify_business(
     business_id: int = Depends(get_business_id)
 ):
     return business_id
+
+@app.get("/admin/knowledge")
+def get_admin_knowledge(
+    business_id: int = Depends(verify_business)
+):
+    db = SessionLocal()
+    items = db.query(Knowledge).filter(
+        Knowledge.business_id == business_id
+    ).all()
+    db.close()
+    return items
+
+@app.post("/admin/knowledge")
+def create_knowledge(
+    title: str,
+    content: str,
+    business_id: int = Depends(verify_business)
+):
+    return add_knowledge(business_id, title, content)
+
+@app.patch("/admin/knowledge/{knowledge_id}")
+def update_admin_knowledge(
+    knowledge_id: int,
+    title: str,
+    content: str,
+    business_id: int = Depends(verify_business)
+):
+    item = update_knowledge(business_id, knowledge_id, title, content)
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Knowledge not found")
+
+    return item
+
+@app.delete("/admin/knowledge/{knowledge_id}")
+def delete_admin_knowledge(
+    knowledge_id: int,
+    business_id: int = Depends(verify_business)
+):
+    if not delete_knowledge(business_id, knowledge_id):
+        raise HTTPException(status_code=404, detail="Knowledge not found")
+
+    return {"success": True}
     
 @app.get(
     "/admin/customers",

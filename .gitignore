@@ -20,3 +20,4 @@ check_token.py
 
 credentials.json
 token.json
+chroma_db/

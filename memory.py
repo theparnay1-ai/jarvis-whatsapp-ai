@@ -161,9 +161,10 @@ New memory:
 
     # Default to creating a new memory
     save_memory(
-        sender,
-        memory
-    )
+    business_id,
+    sender,
+    memory
+)
 
     print(
         "New memory saved:",

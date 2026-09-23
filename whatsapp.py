@@ -36,6 +36,3 @@ def send_whatsapp_message(to, message):
     print("Response:", response.text)
 
     return response
-print("WhatsApp token loaded:", bool(ACCESS_TOKEN))
-print("WhatsApp token length:", len(ACCESS_TOKEN) if ACCESS_TOKEN else 0)
-print("Phone ID:", PHONE_NUMBER_ID)

@@ -28,7 +28,6 @@ def get_customer_context(
 
         conversation_history.append({
             "message": item.message,
-            "response": item.response
         })
 
     memory_list = [
