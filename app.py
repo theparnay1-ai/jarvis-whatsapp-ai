@@ -9,7 +9,10 @@ from agent.agent import process_message
 from memory import process_memory
 from whatsapp import send_whatsapp_message
 from database import (
+    WhatsAppNumber,
+    get_business_by_phone_number,
     BusinessUser,
+    Business,
     SessionLocal,
     message_exists,
     save_message,
@@ -129,7 +132,14 @@ async def receive_webhook(request: Request):
     data = await request.json()
 
     try:
-        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
+        value = data["entry"][0]["changes"][0]["value"]
+        phone_number_id = value["metadata"]["phone_number_id"]
+        business_id = get_business_by_phone_number(phone_number_id)
+
+        if not business_id:
+            return {"status": "ignored"}
+
+        message = value["messages"][0]
 
         sender = message["from"]
         message_id = message["id"]
@@ -269,6 +279,48 @@ def verify_business(
     business_id: int = Depends(get_business_id)
 ):
     return business_id
+
+@app.get("/admin/business", tags=["Admin"])
+def get_business(business_id: int = Depends(verify_business)):
+    db = SessionLocal()
+    business = db.query(Business).filter(Business.id == business_id).first()
+    db.close()
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    return business
+
+
+@app.patch("/admin/business", tags=["Admin"])
+def update_business(
+    name: str = None,
+    industry: str = None,
+    description: str = None,
+    email: str = None,
+    phone: str = None,
+    timezone: str = None,
+    business_id: int = Depends(verify_business)
+):
+    db = SessionLocal()
+    business = db.query(Business).filter(Business.id == business_id).first()
+    if not business:
+        db.close()
+        raise HTTPException(status_code=404, detail="Business not found")
+
+    for key, value in {
+        "name": name,
+        "industry": industry,
+        "description": description,
+        "email": email,
+        "phone": phone,
+        "timezone": timezone
+    }.items():
+        if value is not None:
+            setattr(business, key, value)
+
+    db.commit()
+    db.refresh(business)
+    db.close()
+    return business
 
 @app.get("/admin/knowledge")
 def get_admin_knowledge(

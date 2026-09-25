@@ -1,11 +1,12 @@
-async function apiRequest(endpoint, apiKey) {
+async function apiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem("jwt");
 
     const response = await fetch(endpoint, {
-
+        ...options,
         headers: {
-            "X-Admin-Key": apiKey
+            ...(options.headers || {}),
+            "Authorization": `Bearer ${token}`
         }
-
     });
 
     if (!response.ok) {
@@ -152,12 +153,10 @@ setActiveNavigation
 let dashboardAutoRefresh = null;
 async function loadDashboard() {
 
-const apiKey = document.getElementById("apiKey").value;
-
-if (!apiKey) {
-    alert("Please enter the admin API key.");
-    return;
-}
+if (!localStorage.getItem("jwt")) {
+        alert("Please login first.");
+        return;
+    }
 
 const loadingMessage =
     document.getElementById("loadingMessage");
@@ -169,8 +168,7 @@ if (loadingMessage) {
 try {
 
     const stats = await apiRequest(
-        "/admin/stats",
-        apiKey
+        "/admin/stats"
     );
 
     document.getElementById("customers").textContent =
@@ -189,8 +187,7 @@ try {
         stats.pending_meetings;
 
         const customers = await apiRequest(
-    "/admin/customers",
-    apiKey
+    "/admin/customers"
 );
 
 const customerTable =
@@ -239,8 +236,7 @@ customers.customers.forEach(customer => {
 
 
     const leads = await apiRequest(
-        "/admin/leads",
-        apiKey
+        "/admin/leads"
     );
 
     const leadTable =
@@ -327,8 +323,7 @@ const issueEndpoint = issueStatus
     : "/admin/issues";
 
 const issues = await apiRequest(
-    issueEndpoint,
-    apiKey
+    issueEndpoint
 );
 
     const issueTable =
@@ -398,8 +393,7 @@ const meetingEndpoint = meetingStatus
     : "/admin/meetings";
 
 const meetings = await apiRequest(
-    meetingEndpoint,
-    apiKey
+    meetingEndpoint
 );
 
 const meetingTable =
@@ -465,10 +459,7 @@ meetings.meetings
     });
     if (!dashboardAutoRefresh) {
         dashboardAutoRefresh = setInterval(() => {
-            const apiKey =
-                document.getElementById("apiKey").value;
-
-            if (apiKey) {
+            if (localStorage.getItem("jwt")) {
                 loadDashboard();
             }
         }, 30000);
@@ -492,8 +483,7 @@ if (loadingMessage) {
 
 async function updateMeeting(meetingId, status) {
 
-const apiKey =
-    document.getElementById("apiKey").value;
+
 
 try {
 
@@ -506,7 +496,7 @@ try {
         {
             method: "PATCH",
             headers: {
-                "X-Admin-Key": apiKey
+                "Authorization": `Bearer ${localStorage.getItem("jwt")}`
             }
         }
     );
@@ -534,7 +524,7 @@ showUpdateMessage(
 }
 async function updateLead(leadId, status = null, priority = null) {
 
-const apiKey = document.getElementById("apiKey").value;
+
 
 try {
 
@@ -553,7 +543,7 @@ try {
         {
             method: "PATCH",
             headers: {
-                "X-Admin-Key": apiKey
+                "Authorization": `Bearer ${localStorage.getItem("jwt")}`
             }
         }
     );
@@ -577,7 +567,6 @@ showUpdateMessage("Lead updated successfully!");
 
 async function updateIssue(issueId, status = null, priority = null) {
 
-const apiKey = document.getElementById("apiKey").value;
 
 try {
 
@@ -596,7 +585,7 @@ try {
         {
             method: "PATCH",
             headers: {
-                "X-Admin-Key": apiKey
+                "Authorization": `Bearer ${localStorage.getItem("jwt")}`
             }
         }
     );
@@ -642,8 +631,7 @@ rows.forEach(row => {
 }
 async function updateCustomer(customerId) {
 
-const apiKey =
-    document.getElementById("apiKey").value;
+
 
 const name =
     document.getElementById(
@@ -667,7 +655,7 @@ try {
         {
             method: "PATCH",
             headers: {
-                "X-Admin-Key": apiKey
+                "Authorization": `Bearer ${localStorage.getItem("jwt")}`
             }
         }
     );
@@ -696,10 +684,7 @@ try {
 
 function logoutAdmin() {
 
-const apiKey =
-    document.getElementById("apiKey");
-
-apiKey.value = "";
+localStorage.removeItem("jwt");
 
 document.getElementById("customers").textContent = "-";
 document.getElementById("leads").textContent = "-";

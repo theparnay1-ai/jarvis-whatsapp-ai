@@ -55,6 +55,13 @@ class Business(Base):
     timezone = Column(String, default="Asia/Kolkata")
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class WhatsAppNumber(Base):
+    __tablename__ = "whatsapp_numbers"
+
+    id = Column(Integer, primary_key=True)
+    business_id = Column(Integer, ForeignKey("businesses.id"), nullable=False, index=True)
+    phone_number_id = Column(String, unique=True, nullable=False, index=True)
+
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
@@ -152,6 +159,14 @@ def search_knowledge(business_id, message):
 
     db.close()
     return matches[:5]
+
+def get_business_by_phone_number(phone_number_id):
+    db = SessionLocal()
+    item = db.query(WhatsAppNumber).filter(
+        WhatsAppNumber.phone_number_id == phone_number_id
+    ).first()
+    db.close()
+    return item.business_id if item else None
 
 
 def message_exists(message_id):
