@@ -111,7 +111,6 @@ class Message(Base):
         String,
         index=True
     )
-    sender = Column(String, index=True)
 
     message = Column(Text)
 
@@ -315,7 +314,6 @@ def get_memories(business_id, sender):
 
     return memories
 
-Base.metadata.create_all(bind=engine)
 
 def update_memory(business_id, memory_id, new_memory):
 
@@ -735,7 +733,6 @@ class Customer(Base):
         default=datetime.utcnow
     )
 
-Base.metadata.create_all(bind=engine)
 
 def create_customer(
     business_id,

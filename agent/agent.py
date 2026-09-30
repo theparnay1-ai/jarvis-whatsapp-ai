@@ -17,7 +17,6 @@ from agent.tools.meetings import (
     get_pending_customer_meeting,
     confirm_and_book_meeting
 )
-from agent.tools.meetings import get_pending_customer_meeting
 from agent.meeting_parser import extract_selected_meeting_time
 from datetime import datetime, timedelta
 from client import client
@@ -30,31 +29,11 @@ import re
 
 
 def is_meeting_confirmation(message):
-    """
-    Detect whether the customer is confirming
-    a previously proposed meeting.
-    """
-
-    text = message.lower().strip()
-
-    confirmation_phrases = [
-        "yes",
-        "yes please",
-        "book it",
-        "book this",
-        "schedule it",
-        "schedule this",
-        "confirm",
-        "confirmed",
-        "okay book it",
-        "go ahead",
-        "do it"
-    ]
-
-    return any(
-        phrase in text
-        for phrase in confirmation_phrases
-    )
+    return message.lower().strip() in {
+        "yes", "yes please", "book it", "book this",
+        "schedule it", "schedule this", "confirm",
+        "confirmed", "okay book it", "go ahead", "do it"
+    }
 
 def handle_meeting_selection(
     business_id,
@@ -66,7 +45,7 @@ def handle_meeting_selection(
     alternatives previously offered.
     """
 
-    pending = get_pending_customer_meeting(sender)
+    pending = get_pending_customer_meeting(business_id, sender)
 
     if not pending["success"]:
         return None
@@ -289,8 +268,6 @@ def process_message(business_id,sender, message):
     # Classify message
     # Classify message
     classification = classify_message(message)
-
-    intent = classification["intent"]
 
     intent = classification["intent"]
 
@@ -572,8 +549,6 @@ def process_message(business_id,sender, message):
 
     # Generate customer response
     # Generate customer response
-
-    retrieval_query = message
 
     retrieval_query = message
 

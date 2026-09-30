@@ -150,6 +150,31 @@ window.addEventListener(
 "load",
 setActiveNavigation
 );
+
+async function loginAdmin() {
+    const email = document.getElementById("adminEmail").value;
+    const password = document.getElementById("adminPassword").value;
+
+    try {
+        const response = await fetch("/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({email, password})
+        });
+
+        const data = await response.json();
+
+if (!response.ok) {
+    throw new Error(`${response.status}: ${data.detail || "Login failed"}`);
+}
+        localStorage.setItem("jwt", data.access_token);
+
+        showUpdateMessage("Login successful!");
+await loadDashboard();
+    } catch (error) {
+        alert(error.message);
+    }
+}
 let dashboardAutoRefresh = null;
 async function loadDashboard() {
 
@@ -468,8 +493,8 @@ meetings.meetings
 } catch (error) {
 
 alert(
-    "Unable to load dashboard. Check your API key."
-);
+        "Unable to load dashboard. Please login again."
+    );
 
 } finally {
 
@@ -559,7 +584,7 @@ showUpdateMessage("Lead updated successfully!");
 } catch (error) {
 
     alert(
-        "Unable to update lead. Check your admin API key."
+        "Unable to update lead. Please login again."
     );
 
 }
@@ -601,7 +626,7 @@ showUpdateMessage("Issue updated successfully!");
 } catch (error) {
 
     alert(
-        "Unable to update issue. Check your admin API key."
+        "Unable to update issue. Please login again."
     );
 
 }

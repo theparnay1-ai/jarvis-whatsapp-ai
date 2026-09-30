@@ -53,15 +53,28 @@ app = FastAPI(
     version="2.0.0"
 )
 
-@app.post("/login")
-def login(email: str, password: str):
+from pydantic import BaseModel
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/login")
+def login(data: LoginRequest):
     db = SessionLocal()
-    user = db.query(BusinessUser).filter(BusinessUser.email == email).first()
+    user = db.query(BusinessUser).filter(
+        BusinessUser.email == data.email
+    ).first()
     db.close()
 
-    if not user or not bcrypt.checkpw(password.encode(), user.password_hash.encode()):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not user or not bcrypt.checkpw(
+        data.password.encode(),
+        user.password_hash.encode()
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
 
     token = jwt.encode(
         {"user_id": user.id, "business_id": user.business_id},
