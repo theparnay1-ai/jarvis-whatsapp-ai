@@ -208,7 +208,7 @@ async def receive_webhook(request: Request):
 
         print("Message saved to database.")
 
-        # Decide whether JARVIS should reply
+        # Decide whether Zyroniq should reply
         reply_needed = should_reply(text)
 
         print("Should reply:", reply_needed)
