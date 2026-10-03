@@ -26,22 +26,21 @@ def add_knowledge(business_id, title, content):
 def search_knowledge(business_id, query, limit=3):
     results = collection.query(
         query_embeddings=[model.encode(query).tolist()],
-        n_results=limit,
-        where={"business_id": business_id},
-        include=["documents", "distances"]
+        n_results=10,
+        include=["documents", "distances", "metadatas"]
     )
 
     if not results["documents"]:
         return []
 
     return [
-        doc for doc, distance in zip(
+        doc for doc, distance, meta in zip(
             results["documents"][0],
-            results["distances"][0]
+            results["distances"][0],
+            results["metadatas"][0]
         )
-        if distance < 1.0
-    ]
-
+        if meta.get("business_id") == business_id and distance < 1.0
+    ][:limit]
 def update_knowledge(business_id, knowledge_id, title, content):
     db = SessionLocal()
     item = db.query(Knowledge).filter(

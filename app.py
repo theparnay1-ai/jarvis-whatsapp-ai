@@ -34,8 +34,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from rag import add_knowledge, update_knowledge, delete_knowledge
 security = HTTPBearer()
 
-business_id = 1
-
 load_dotenv()
 
 
