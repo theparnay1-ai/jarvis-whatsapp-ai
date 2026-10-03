@@ -52,6 +52,7 @@ class Business(Base):
     description = Column(Text)
     email = Column(String)
     phone = Column(String)
+    owner_phone = Column(String)
     timezone = Column(String, default="Asia/Kolkata")
     created_at = Column(DateTime, default=datetime.utcnow)
 

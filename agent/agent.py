@@ -30,7 +30,7 @@ import re
 
 def is_meeting_confirmation(message):
     return message.lower().strip() in {
-        "yes", "yes please", "book it", "book this",
+        "yes", "yes please", "yes book it", "book it", "book this",
         "schedule it", "schedule this", "confirm",
         "confirmed", "okay book it", "go ahead", "do it"
     }
@@ -505,6 +505,8 @@ def process_message(business_id,sender, message):
             lead_status = "contacted"
 
         # Existing lead → update it
+
+        is_new_lead = not existing_lead["success"]
         if existing_lead["success"]:
 
             action = "update_lead"
@@ -536,7 +538,18 @@ def process_message(business_id,sender, message):
     business_id=business_id,
     lead_id=lead["lead_id"],
     status=lead_status
+
+        
 )
+                
+        if is_new_lead or lead_status == "qualified":
+         requires_owner = True
+        owner_notification = create_owner_notification(
+            sender=sender,
+            message=message,
+            intent=intent,
+            priority=priority
+        )
 
     elif intent == "payment":
         action = "handle_payment"

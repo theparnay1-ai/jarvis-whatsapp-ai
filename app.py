@@ -262,12 +262,31 @@ async def receive_webhook(request: Request):
         print("Agent Result:", agent_result)
         print("AI Reply:", reply)
 
+        if agent_result.get("requires_owner"):
+            db = SessionLocal()
+            business = db.query(Business).filter(
+                Business.id == business_id
+            ).first()
+            number = db.query(WhatsAppNumber).filter(
+                WhatsAppNumber.business_id == business_id
+            ).first()
+            db.close()
+
+            if business and business.owner_phone and number:
+                send_whatsapp_message(
+                    business.owner_phone,
+                    f"🚨 {business.name} {agent_result['intent'].title()}\n"
+                    f"From: {sender}\n"
+                    f"Message: {text}",
+                    number.phone_number_id
+                )
+
         # Save AI response
         save_response(
-    business_id=business_id,
-    message_id=message_id,
-    response=reply
-)
+            business_id=business_id,
+            message_id=message_id,
+            response=reply
+        )
 
         # Send response to WhatsApp
         send_whatsapp_message(
