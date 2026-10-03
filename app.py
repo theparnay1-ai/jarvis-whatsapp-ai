@@ -329,6 +329,7 @@ def update_business(
     description: str = None,
     email: str = None,
     phone: str = None,
+    owner_phone: str = None,
     timezone: str = None,
     business_id: int = Depends(verify_business)
 ):
@@ -344,6 +345,7 @@ def update_business(
         "description": description,
         "email": email,
         "phone": phone,
+        "owner_phone": owner_phone,
         "timezone": timezone
     }.items():
         if value is not None:
