@@ -39,7 +39,7 @@ def search_knowledge(business_id, query, limit=3):
             results["distances"][0],
             results["metadatas"][0]
         )
-        if meta.get("business_id") == business_id and distance < 1.0
+        if meta.get("business_id") == business_id and distance < 1.7
     ][:limit]
 def update_knowledge(business_id, knowledge_id, title, content):
     db = SessionLocal()
