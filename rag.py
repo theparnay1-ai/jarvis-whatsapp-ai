@@ -1,48 +1,53 @@
-import chromadb
-from sentence_transformers import SentenceTransformer
-from database import SessionLocal, Knowledge
-
-model = SentenceTransformer("all-MiniLM-L6-v2")
-client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_or_create_collection("knowledge")
+from database import (
+    SessionLocal,
+    Knowledge,
+)
 
 
 def add_knowledge(business_id, title, content):
     db = SessionLocal()
-    item = Knowledge(business_id=business_id, title=title, content=content)
+
+    item = Knowledge(
+        business_id=business_id,
+        title=title,
+        content=content
+    )
+
     db.add(item)
     db.commit()
     db.refresh(item)
     db.close()
 
-    collection.add(
-        ids=[str(item.id)],
-        documents=[content],
-        metadatas=[{"business_id": business_id, "title": title}]
-    )
     return item
 
 
 def search_knowledge(business_id, query, limit=3):
-    results = collection.query(
-        query_embeddings=[model.encode(query).tolist()],
-        n_results=10,
-        include=["documents", "distances", "metadatas"]
-    )
+    db = SessionLocal()
 
-    if not results["documents"]:
-        return []
+    words = query.lower().split()
 
-    return [
-        doc for doc, distance, meta in zip(
-            results["documents"][0],
-            results["distances"][0],
-            results["metadatas"][0]
+    results = db.query(Knowledge).filter(
+        Knowledge.business_id == business_id
+    ).all()
+
+    matches = [
+        k.content
+        for k in results
+        if any(
+            word in k.content.lower()
+            for word in words
+            if len(word) > 2
         )
-        if meta.get("business_id") == business_id and distance < 1.7
-    ][:limit]
+    ]
+
+    db.close()
+
+    return matches[:limit]
+
+
 def update_knowledge(business_id, knowledge_id, title, content):
     db = SessionLocal()
+
     item = db.query(Knowledge).filter(
         Knowledge.id == knowledge_id,
         Knowledge.business_id == business_id
@@ -54,19 +59,17 @@ def update_knowledge(business_id, knowledge_id, title, content):
 
     item.title = title
     item.content = content
+
     db.commit()
     db.refresh(item)
     db.close()
 
-    collection.update(
-        ids=[str(knowledge_id)],
-        documents=[content],
-        metadatas=[{"business_id": business_id, "title": title}]
-    )
     return item
+
 
 def delete_knowledge(business_id, knowledge_id):
     db = SessionLocal()
+
     item = db.query(Knowledge).filter(
         Knowledge.id == knowledge_id,
         Knowledge.business_id == business_id
@@ -80,5 +83,4 @@ def delete_knowledge(business_id, knowledge_id):
     db.commit()
     db.close()
 
-    collection.delete(ids=[str(knowledge_id)])
     return True
