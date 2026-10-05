@@ -13,12 +13,14 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 
 
-DATABASE_URL = "sqlite:///./chatbot.db"
+import os
+from dotenv import load_dotenv
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -142,7 +144,8 @@ class Knowledge(Base):
     embedding = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-Base.metadata.create_all(bind=engine)
+# Database schema is managed separately.
+# Do not automatically create tables on application startup.
 
 def search_knowledge(business_id, message):
     db = SessionLocal()
