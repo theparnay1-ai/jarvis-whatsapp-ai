@@ -10,53 +10,7 @@ client = genai.Client(
 
 
 def should_reply(message):
-
-    text = message.lower().strip()
-
-    if text in {"tomorrow", "today", "tonight"} or "am" in text or "pm" in text:
-        return True
-
-    if text.startswith((
-        "it should", "it must", "it needs",
-        "i also want", "i also need",
-        "and what about", "what about",
-        "how much", "how many"
-    )):
-        return True
-
-    prompt = f"""
-You are controlling an AI WhatsApp assistant.
-
-Decide whether the assistant should reply to this message.
-
-Reply with ONLY:
-YES
-or
-NO
-
-Reply YES when:
-- The person is asking a question.
-- The person is directly talking to the assistant.
-- The message requires an answer.
-- The person says hello/greeting to the assistant.
-
-Reply NO when:
-- It is casual conversation between humans.
-- The assistant is not being addressed.
-- A reply would be unnecessary.
-- The message is only an emoji/reaction.
-- The message doesn't require a response.
-
-Message:
-{message}
-"""
-
-    response = client.models.generate_content(
-        model="models/gemini-3.5-flash-lite",
-        contents=prompt
-    )
-
-    return response.text.strip().upper() == "YES"
+    return bool(message and message.strip())
 
 
 def aiprocess(message, 

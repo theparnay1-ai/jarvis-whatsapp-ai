@@ -7,7 +7,8 @@ from rag import search_knowledge
 from agent.tools.leads import (
     create_customer_lead,
     get_customer_lead_by_sender,
-    update_customer_lead
+    update_customer_lead,
+    get_customer_leads
 )
 from agent.tools.meetings import (
     check_meeting_slot,
@@ -23,8 +24,11 @@ from client import client
 from database import (
     get_customer,
     update_customer,
-    create_customer
+    create_customer,
+    Business,
+    SessionLocal
 )
+from whatsapp import send_whatsapp_message
 import re
 
 
@@ -140,6 +144,102 @@ def process_message(business_id,sender, message):
     """
     Process an incoming customer message through the AI agent.
     """
+
+    db = SessionLocal()
+    business = db.query(Business).filter(Business.id == business_id).first()
+    db.close()
+
+    if business and business.owner_phone == sender:
+
+        if message.lower().startswith("follow up with"):
+            leads = get_customer_leads(business_id)
+            words = set(re.findall(r"\w+", message.lower()))
+            matches = sorted(
+                [
+                    (len(words & set(re.findall(r"\w+", x["requirement"].lower()))), x)
+                    for x in leads if x["requirement"]
+                ],
+                reverse=True
+            )
+
+            if not matches or matches[0][0] == 0:
+                lead = None
+            elif len(matches) > 1 and matches[0][0] == matches[1][0]:
+                response = "\n".join(
+                    f"{i+1}. Lead #{x[1]['lead_id']} — {x[1]['sender']}"
+                    for i, x in enumerate(matches[:3])
+                    if x[0] == matches[0][0]
+                )
+                return {
+                    "sender": sender,
+                    "message": message,
+                    "intent": "owner_command",
+                    "priority": "normal",
+                    "requires_owner": False,
+                    "action": "choose_lead",
+                    "response": f"I found multiple matching leads:\n{response}\n\nWhich lead should I follow up with?"
+                }
+            else:
+                lead = matches[0][1]
+
+            if not lead or not lead["requirement"]:
+                response = "I couldn't find a matching lead."
+            else:
+                follow_up = (
+                    "Hi! Just following up regarding your interest in the "
+                    "Zyroniq AI WhatsApp agent. Let me know if you'd like to "
+                    "continue with the setup."
+                )
+                result = send_whatsapp_message(
+                    lead["sender"],
+                    follow_up
+                )
+                response = (
+                    "✅ Follow-up sent to "
+                    f"{lead['sender']}."
+                    if result.ok
+                    else "❌ I couldn't send the follow-up."
+                )
+
+            return {
+                "sender": sender,
+                "message": message,
+                "intent": "owner_command",
+                "priority": "normal",
+                "requires_owner": False,
+                "action": "follow_up",
+                "response": response
+            }
+        if message.lower().strip() == "show my leads":
+            leads = get_customer_leads(business_id)
+            response = "\n\n".join(
+                f"📋 Lead #{lead['lead_id']}\n"
+                f"Customer: {lead['sender']}\n"
+                f"Status: {lead['status']}\n"
+                f"Priority: {lead['priority']}\n"
+                f"Requirement: {lead['requirement'] or 'None'}"
+                for lead in leads
+            ) or "No leads found."
+
+            return {
+                "sender": sender,
+                "message": message,
+                "intent": "owner_command",
+                "priority": "normal",
+                "requires_owner": False,
+                "action": "show_leads",
+                "response": response
+            }
+
+        return {
+            "sender": sender,
+            "message": message,
+            "intent": "owner_command",
+            "priority": "normal",
+            "requires_owner": False,
+            "action": "owner_command",
+            "response": "Owner command not recognized."
+        }
 
         # Ensure customer profile exists and update last interaction
     customer = get_customer(
@@ -511,12 +611,15 @@ def process_message(business_id,sender, message):
 
             action = "update_lead"
 
+            old_requirement = existing_lead.get("requirement") or ""
+            requirement = f"{old_requirement}\n{message}".strip()
+
             lead = update_customer_lead(
-    business_id=business_id,
-    lead_id=existing_lead["lead_id"],
-    status=lead_status,
-    priority=priority,
-    requirement=message
+            business_id=business_id,
+            lead_id=existing_lead["lead_id"],
+            status=lead_status,
+            priority=priority,
+            requirement=requirement
 )
 
         # New customer → create lead

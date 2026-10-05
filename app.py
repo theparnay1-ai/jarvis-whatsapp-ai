@@ -150,6 +150,10 @@ async def receive_webhook(request: Request):
         if not business_id:
             return {"status": "ignored"}
 
+        if "statuses" in value:
+            print("WHATSAPP STATUS:", value["statuses"][0])
+            return {"status": "status_received"}
+
         message = value["messages"][0]
 
         sender = message["from"]
@@ -272,12 +276,14 @@ async def receive_webhook(request: Request):
 
             if business and business.owner_phone and number:
                 send_whatsapp_message(
-                    business.owner_phone,
-                    f"🚨 {business.name} {agent_result['intent'].title()}\n"
-                    f"From: {sender}\n"
-                    f"Message: {text}",
-                    number.phone_number_id
-                )
+    business.owner_phone,
+    f"🔔 New {agent_result['intent'].title()}\n\n"
+    f"Business: {business.name}\n"
+    f"Customer: {sender}\n"
+    f"Priority: {agent_result['priority'].upper()}\n\n"
+    f"Message:\n{text}",
+    number.phone_number_id
+)
 
         # Save AI response
         save_response(
@@ -303,7 +309,7 @@ async def receive_webhook(request: Request):
         return {
             "status": "ignored"
         }
-    
+
 
 def verify_business(
     business_id: int = Depends(get_business_id)
@@ -396,7 +402,7 @@ def delete_admin_knowledge(
         raise HTTPException(status_code=404, detail="Knowledge not found")
 
     return {"success": True}
-    
+
 @app.get(
     "/admin/customers",
     tags=["Admin"],

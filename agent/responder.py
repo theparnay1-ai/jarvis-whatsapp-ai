@@ -20,11 +20,6 @@ def generate_response(
     intent = classification["intent"]
     priority = classification["priority"]
 
-    if intent == "lead":
-        if any(x in message.lower() for x in ["it should", "it must", "it needs", "also want", "also need"]):
-            return "Got it! I've added those requirements to your project details."
-        return "Thanks for sharing that! I'd be happy to help with your project. Could you tell me a little more about what you'd like to build and the features you need?"
-
     if not knowledge and intent == "customer_support" and (
     "?" in message or
     message.lower().startswith((

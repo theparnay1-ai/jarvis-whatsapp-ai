@@ -76,17 +76,15 @@ def update_customer_lead(
     business_id,
     lead_id,
     status=status,
-    priority=priority
-)
+    priority=priority,
+    requirement=requirement
+    )
 
     if status:
         lead.status = status
 
     if priority:
         lead.priority = priority
-
-    if requirement:
-        lead.requirement = requirement
         
     if not lead:
         return {
@@ -138,3 +136,24 @@ def get_customer_lead_by_sender(
         "priority": lead.priority,
         "requirement": lead.requirement
     }
+
+def get_customer_leads(business_id):
+    db = SessionLocal()
+    leads = (
+        db.query(Lead)
+        .filter(Lead.business_id == business_id)
+        .order_by(Lead.created_at.desc())
+        .all()
+    )
+    db.close()
+
+    return [
+        {
+            "lead_id": lead.id,
+            "sender": lead.sender,
+            "status": lead.status,
+            "priority": lead.priority,
+            "requirement": lead.requirement
+        }
+        for lead in leads
+    ]
