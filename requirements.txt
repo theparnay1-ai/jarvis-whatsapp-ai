@@ -120,3 +120,4 @@ watchfiles==1.2.0
 websocket-client==1.9.2
 websockets==16.1.1
 yarl==1.25.1
+psycopg[binary]==3.3.6
