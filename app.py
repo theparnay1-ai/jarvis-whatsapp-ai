@@ -115,6 +115,94 @@ def health():
         "status": "healthy"
     }
 
+@app.get("/privacy-policy", response_class=HTMLResponse, include_in_schema=False)
+def privacy_policy():
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Zyroniq Privacy Policy</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 850px;
+                margin: 40px auto;
+                padding: 0 20px;
+                line-height: 1.6;
+                color: #222;
+            }
+            h1 {
+                color: #111;
+            }
+            h2 {
+                margin-top: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Zyroniq Privacy Policy</h1>
+
+        <p><strong>Last updated:</strong> October 2026</p>
+
+        <p>
+            Zyroniq provides AI-powered WhatsApp customer communication,
+            automation, customer management, lead qualification and related
+            business automation services.
+        </p>
+
+        <h2>Information We Collect</h2>
+        <p>
+            Depending on how the service is used, Zyroniq may process information
+            such as customer names, phone numbers, WhatsApp messages, conversation
+            history, leads, customer inquiries and information provided during
+            business interactions.
+        </p>
+
+        <h2>How We Use Information</h2>
+        <p>
+            Information is used to provide automated customer support, respond to
+            WhatsApp messages, manage customer interactions, qualify leads,
+            maintain conversation context and provide business automation features.
+        </p>
+
+        <h2>Data Sharing</h2>
+        <p>
+            We do not sell personal information. Information may be processed by
+            service providers required to operate the platform, such as hosting,
+            database, messaging and AI service providers.
+        </p>
+
+        <h2>Data Security</h2>
+        <p>
+            We take reasonable technical and organizational measures to protect
+            information processed through the service.
+        </p>
+
+        <h2>Data Retention</h2>
+        <p>
+            Information may be retained for as long as necessary to provide the
+            service, maintain business records, resolve issues and meet applicable
+            legal requirements.
+        </p>
+
+        <h2>Your Rights</h2>
+        <p>
+            Users may request information about their personal data or request
+            deletion where applicable by contacting us.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+            For privacy-related questions or data deletion requests, contact:
+            <br>
+            <strong>theparnay1@gmail.com</strong>
+        </p>
+    </body>
+    </html>
+    """)
+
 
 @app.get("/webhook", tags=["WhatsApp"])
 def verify_webhook(
