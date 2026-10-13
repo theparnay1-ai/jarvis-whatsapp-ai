@@ -79,9 +79,24 @@ STRICT RULES:
 Return ONLY the message that should be sent to the customer.
 """
 
-    response = client.models.generate_content(
-        model="models/gemini-3.5-flash-lite",
-        contents=prompt
-    )
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-2.5-flash-lite",
+            contents=prompt
+        )
 
-    return response.text.strip()
+        if response.text:
+            return response.text.strip()
+
+        return (
+            "Thanks for your message! I'm having trouble preparing "
+            "a response right now. Please try again shortly."
+        )
+
+    except Exception as e:
+        print(f"Gemini response generation failed: {type(e).__name__}: {e}")
+
+        return (
+            "Thanks for your message! I'm having a temporary issue "
+            "processing your request. Please try again shortly."
+        )
