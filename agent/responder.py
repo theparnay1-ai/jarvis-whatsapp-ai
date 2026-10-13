@@ -81,7 +81,7 @@ Return ONLY the message that should be sent to the customer.
 
     try:
         response = client.models.generate_content(
-            model="models/gemini-2.5-flash-lite",
+            model="models/gemini-3.5-flash-lite",
             contents=prompt
         )
 

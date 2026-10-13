@@ -71,7 +71,7 @@ Current user message:
 """
 
     response = client.models.generate_content(
-        model="models/gemini-2.5-flash-lite",
+        model="models/gemini-3.5-flash-lite",
         contents=prompt
     )
 
@@ -113,14 +113,22 @@ User message:
 {message}
 """
 
-    response = client.models.generate_content(
-        model="models/gemini-2.5-flash-lite",
-        contents=prompt
-    )
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-3.5-flash-lite",
+            contents=prompt
+        )
 
-    result = response.text.strip()
+        if not response.text:
+            return None
 
-    if result.upper() == "NONE":
+        result = response.text.strip()
+
+        if result.upper() == "NONE":
+            return None
+
+        return result
+
+    except Exception as e:
+        print(f"Memory extraction failed: {type(e).__name__}: {e}")
         return None
-
-    return result
