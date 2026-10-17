@@ -80,36 +80,60 @@ Current user message:
 def extract_memory(message):
 
     prompt = f"""
-You are the memory system for Parnay's personal AI assistant.
+You are a memory extraction system for a multi-customer
+WhatsApp business AI agent.
 
-Analyze the user's message and determine whether it contains
-useful information that should be remembered for future conversations.
+Analyze the customer's message and extract only useful,
+explicitly stated information about THAT CUSTOMER.
 
-Save information such as:
-- Name
-- Preferences
-- Skills
-- Projects
-- Goals
-- Long-term interests
-- Important personal context
-- Stable facts about the user
+IMPORTANT RULES:
+- The customer is the person who sent the message.
+- Never assume the customer's name or identity.
+- Never use the business owner's name as the customer's name.
+- Never invent personal details.
+- Do not infer a name from phrases such as:
+  "I am interested", "I am looking", or "I want a chatbot".
+- Only record a customer's name when they explicitly introduce
+  themselves, for example: "My name is Rahul."
+- Only record preferences, goals, or requirements that the
+  customer actually states.
+- Do not convert a business enquiry into a personal fact.
+- Do not save information about the AI assistant's owner.
+- Do not save information that is not useful for future
+  conversations with this same customer.
 
-Do NOT save:
-- Temporary questions
-- Greetings
-- Casual conversation
-- Jokes
-- One-time requests
-- Information that is only relevant to the current message
+Examples:
 
-If there is nothing worth remembering, return exactly:
+Customer message:
+"I am interested in getting a WhatsApp chatbot for my business."
 
+Output:
 NONE
 
-Otherwise return ONLY one concise sentence describing the memory.
+Customer message:
+"My name is Rahul. I own a clothing store."
 
-User message:
+Output:
+The customer introduced himself as Rahul and owns a clothing store.
+
+Customer message:
+"I want to automate customer enquiries for my restaurant."
+
+Output:
+The customer wants to automate customer enquiries for their restaurant.
+
+Customer message:
+"How much does your service cost?"
+
+Output:
+NONE
+
+Return NONE if the message contains no useful, explicitly
+stated information about the customer.
+
+Return ONLY NONE or one concise sentence describing the memory.
+
+Customer message:
 {message}
 """
 
@@ -130,5 +154,8 @@ User message:
         return result
 
     except Exception as e:
-        print(f"Memory extraction failed: {type(e).__name__}: {e}")
+        print(
+            f"Memory extraction failed: "
+            f"{type(e).__name__}: {e}"
+        )
         return None

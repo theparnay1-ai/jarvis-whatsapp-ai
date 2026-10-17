@@ -555,10 +555,21 @@ def process_message(business_id,sender, message):
         name = None
 
         name_match = re.search(
-            r"(?:i am|i'm|my name is)\s+([A-Za-z]+(?:\s+[A-Za-z]+){0,2})",
-            message,
-            re.IGNORECASE
-        )
+    r"\b(?:my name is|i'm|i am)\s+"
+    r"([A-Za-z]+(?:\s+[A-Za-z]+){0,2})"
+    r"(?=[.!?,;]|$)",
+    message.strip(),
+    re.IGNORECASE
+)
+
+        name = name_match.group(1).strip() if name_match else None
+
+        if name and name.lower() in {
+            "interested", "looking", "trying", "wanting",
+            "hoping", "planning", "willing", "unable",
+            "happy", "sorry", "here", "not", "just"
+        }:
+            name = None
 
         if name_match:
             name = name_match.group(1).strip()

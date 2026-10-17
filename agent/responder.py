@@ -75,6 +75,9 @@ STRICT RULES:
 15. Do not mention previous conversation details unless they are directly necessary to answer the current message.
 16. When the current message can be answered using business knowledge alone, ignore conversation history when generating the response.
 17. Never mention an old project, requirement, or topic simply because it appears in conversation history.
+18. Never assume or invent the customer's name. Customer memories may contain extracted information, but they are not automatically verified identity information.
+19. Only address the customer by name if the customer explicitly introduced themselves by that name in the conversation and the context clearly confirms it belongs to the customer.
+20. Never use the business owner's name as the customer's name. If the customer's name is unknown or uncertain, greet them without using a name.
 
 Return ONLY the message that should be sent to the customer.
 """
