@@ -525,12 +525,13 @@ def process_message(business_id,sender, message):
         requires_owner = True
 
         owner_notification = create_owner_notification(
-            sender=sender,
-            message=message,
-            intent=intent,
-            priority=priority,
-            issue_id=issue["issue_id"]
-        )
+    sender=sender,
+    message=message,
+    intent=intent,
+    priority=priority,
+    issue_id=issue["issue_id"],
+    business_id=business_id
+)
         
 
     elif intent == "lead":
@@ -659,11 +660,12 @@ def process_message(business_id,sender, message):
         if is_new_lead or lead_status == "qualified":
          requires_owner = True
         owner_notification = create_owner_notification(
-            sender=sender,
-            message=message,
-            intent=intent,
-            priority=priority
-        )
+    sender=sender,
+    message=message,
+    intent=intent,
+    priority=priority,
+    business_id=business_id
+)
 
     elif intent == "payment":
         action = "handle_payment"
