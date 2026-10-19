@@ -3,269 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>AI Agent Admin Dashboard</title>
-    <link rel="stylesheet" href="/static/css/admin.css">
+    <meta name="theme-color" content="#071326">
+    <title>Zyroniq | AI Dashboard</title>
+    <link rel="stylesheet" href="/static/css/admin.css?v=2">
 </head>
-
 <body>
-    <div class="sidebar">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
 
+    <aside class="sidebar">
         <div class="sidebar-title">
-            AI Agent
-        </div>
-    
-        <a href="#dashboard">
-            Dashboard
-        </a>
-    
-        <a href="#customers-section">
-            Customers
-        </a>
-    
-        <a href="#leads-section">
-            Leads
-        </a>
-    
-        <a href="#issues-section">
-            Issues
-        </a>
-    
-        <a href="#meetings-section">
-            Meetings
-        </a>
-    
-    </div>
-        
-        <div class="main-content">
-        
-        <div class="container" id="dashboard">
-
-    <h1>AI Agent Admin Dashboard</h1>
-
-    <p class="subtitle">
-        Customer CRM, leads, issues and meeting management
-    </p>
-
-    <div class="auth">
-
-        <input type="email" id="adminEmail" placeholder="Email">
-<input type="password" id="adminPassword" placeholder="Password">
-
-<button onclick="loginAdmin()">Load Dashboard</button>
-
-<button onclick="loadDashboard()" class="refresh-button">
-    🔄 Refresh
-</button>
-
-<button
-    onclick="logoutAdmin()"
-    class="logout-button"
->
-    Logout
-</button>
-
-<span
-    id="loadingMessage"
-    class="loading-message"
-    hidden
->
-    Loading dashboard...
-</span>
-
-<span
-    id="lastUpdated"
-    class="last-updated"
->
-    Not loaded yet
-</span>
-
-<div
-    id="updateMessage"
-    class="update-message"
-></div>
-
-    </div>
-
-    <div class="stats">
-
-        <div class="card">
-            <h3>Customers</h3>
-            <p id="customers">-</p>
+            <span class="brand-mark">Z</span>
+            <span>Zyroniq<small>AI Agent</small></span>
         </div>
 
-        <div class="card">
-            <h3>Leads</h3>
-            <p id="leads">-</p>
+        <nav class="sidebar-nav">
+            <a class="active" href="#dashboard"><span class="nav-icon">▦</span>Dashboard</a>
+            <a href="#customers-section"><span class="nav-icon">♙</span>Customers</a>
+            <a href="#leads-section"><span class="nav-icon">♧</span>Leads</a>
+            <a href="#issues-section"><span class="nav-icon">△</span>Issues</a>
+            <a href="#meetings-section"><span class="nav-icon">▣</span>Meetings</a>
+            <a href="#settings-section" class="settings-link"><span class="nav-icon">⚙</span>Settings</a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span class="online-dot"></span>
+            <span>AI Agent <small>System dashboard</small></span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="topbar">
+            <label class="global-search">
+                <span>⌕</span>
+                <input type="search" id="globalSearch" placeholder="Search customers, leads...">
+                <kbd>⌘ K</kbd>
+            </label>
+
+            <div class="topbar-actions">
+                <button class="icon-button" type="button" aria-label="Notifications">♧</button>
+                <div class="profile-avatar">P</div>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Open Issues</h3>
-            <p id="issues">-</p>
-        </div>
-
-        <div class="card">
-            <h3>Booked Meetings</h3>
-            <p id="meetings">-</p>
-        </div>
-
-        <div class="card">
-            <h3>Pending Meetings</h3>
-            <p id="pending">-</p>
-        </div>
-
-    </div>
-
-    <div class="section" id="customers-section">
-
-        <h2>Customers</h2>
-
-        <div class="customer-search-container">
-
-            <input
-            type="text"
-            id="customerSearch"
-            placeholder="🔎 Search by name, email or WhatsApp number..."
-            oninput="filterCustomers()"
-            class="customer-search"
-        >
-
-</div>
-
-<div class="table-container">
-    
-            <table>
-    
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Sender</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Created</th>
-                        <th>Last Interaction</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-    
-                <tbody id="customerTable"></tbody>
-    
-            </table>
-    
-        </div>
-    
-    </div>
-
-    <div class="section" id="leads-section">
-
-        <h2>Recent Leads</h2>
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Customer</th>
-                    <th>Requirement</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-
-            <tbody id="leadTable"></tbody>
-
-        </table>
-
-    </div>
-
-    <div class="section" id="issues-section">
-
-        <h2>Open Issues</h2>
-
-        <table>
-
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Customer</th>
-                    <th>Description</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-
-            <div class="filter-row">
-                <label for="issueStatusFilter">Status:</label>
-            
-                <select id="issueStatusFilter" onchange="loadDashboard()">
-                    <option value="">All</option>
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                </select>
+        <section class="welcome-row" id="dashboard">
+            <div>
+                <div class="eyebrow">YOUR BUSINESS OVERVIEW</div>
+                <h1>Welcome back, Parnay <span class="wave">👋</span></h1>
+                <p class="subtitle">Track, manage and grow with Zyroniq</p>
             </div>
 
-            <tbody id="issueTable"></tbody>
+            <div class="welcome-actions">
+                <div class="date-glass">
+                    <span class="date-icon">▦</span>
+                    <span><small>Today</small><strong id="currentDate">17 Oct 2026</strong></span>
+                </div>
+                <button class="primary-button" type="button" id="addCustomerButton">＋ Add Customer</button>
+            </div>
+        </section>
 
-        </table>
+        <section class="auth glass-panel" aria-label="Administrator login">
+            <input type="email" id="adminEmail" placeholder="Administrator email" autocomplete="username">
+            <input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password">
+            <button onclick="loginAdmin()" class="primary-button" type="button">Load Dashboard</button>
+            <button onclick="loadDashboard()" class="secondary-button" type="button">↻ Refresh</button>
+            <button onclick="logoutAdmin()" class="logout-button" type="button">Logout</button>
+            <span id="loadingMessage" class="loading-message" hidden>Loading...</span>
+            <span id="lastUpdated" class="last-updated">Not loaded yet</span>
+            <div id="updateMessage" class="update-message"></div>
+        </section>
 
-    </div>
+        <section class="stats">
+            <article class="metric-card metric-blue">
+                <div class="metric-top"><span class="metric-icon">♟</span><span class="metric-label">Customers</span></div>
+                <p id="customers">-</p>
+                <span class="metric-caption">Total customers</span>
+            </article>
 
-    <div class="section" id="meetings-section">
+            <article class="metric-card metric-teal">
+                <div class="metric-top"><span class="metric-icon">▽</span><span class="metric-label">Leads</span></div>
+                <p id="leads">-</p>
+                <span class="metric-caption">Potential customers</span>
+            </article>
 
-        <h2>Meetings</h2>
+            <article class="metric-card metric-red">
+                <div class="metric-top"><span class="metric-icon">⚠</span><span class="metric-label">Issues</span></div>
+                <p id="issues">-</p>
+                <span class="metric-caption">Open issues</span>
+            </article>
 
-        <div class="meeting-filter-container">
+            <article class="metric-card metric-purple">
+                <div class="metric-top"><span class="metric-icon">▣</span><span class="metric-label">Meetings</span></div>
+                <p id="meetings">-</p>
+                <span class="metric-caption">Booked meetings</span>
+            </article>
 
-            <label for="meetingStatusFilter">
-                Filter:
-            </label>
-        
-            <select
-                id="meetingStatusFilter"
-                onchange="loadDashboard()"
-            >
-                <option value="">All Meetings</option>
-                <option value="awaiting_confirmation">
-                    Awaiting Confirmation
-                </option>
-                <option value="booked">
-                    Booked
-                </option>
-                <option value="cancelled">
-                    Cancelled
-                </option>
-            </select>
-        
-        </div>
-    
-        <div class="table-container">
-    
-            <table>
-    
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Customer</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Status</th>
-                        <th>Calendar Event</th>
-                    </tr>
-                </thead>
-    
-                <tbody id="meetingTable"></tbody>
-    
-            </table>
-    
-        </div>
-    
-    </div>
+            <article class="metric-card metric-violet">
+                <div class="metric-top"><span class="metric-icon">◷</span><span class="metric-label">Pending</span></div>
+                <p id="pending">-</p>
+                <span class="metric-caption">Awaiting confirmation</span>
+            </article>
+        </section>
 
-</div>
+        <section class="overview-grid">
+            <article class="glass-panel analytics-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Customer Analytics</h2>
+                        <p>Customer and lead overview</p>
+                    </div>
+                    <select id="analyticsPeriod" aria-label="Analytics period">
+                        <option value="6">Last 6 Months</option>
+                        <option value="3">Last 3 Months</option>
+                        <option value="12">Last 12 Months</option>
+                    </select>
+                </div>
 
-<script src="/static/js/admin.js"></script>
+                <div class="chart-legend">
+                    <span><i class="legend-blue"></i>Customers</span>
+                    <span><i class="legend-purple"></i>Leads</span>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="customerAnalyticsChart" aria-label="Customer and lead analytics chart"></canvas>
+                </div>
+                <p class="chart-note">Monthly activity will appear here when analytics data is available.</p>
+            </article>
+
+            <article class="glass-panel recent-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Recent Customers</h2>
+                        <p>Latest customer activity</p>
+                    </div>
+                    <a class="outline-button" href="#customers-section">View all →</a>
+                </div>
+
+                <div id="recentCustomers" class="recent-list">
+                    <div class="empty-state">Log in to load recent customers.</div>
+                </div>
+            </article>
+        </section>
+
+        <section class="section glass-panel" id="customers-section">
+            <div class="section-heading">
+                <div><h2>Customers</h2><p>Manage customer profiles and contact information.</p></div>
+                <input type="text" id="customerSearch" placeholder="⌕ Search by name, email or WhatsApp number..." oninput="filterCustomers()" class="customer-search">
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>ID</th><th>Sender</th><th>Name</th><th>Email</th><th>Created</th><th>Last Interaction</th><th>Action</th></tr></thead>
+                    <tbody id="customerTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section glass-panel" id="leads-section">
+            <div class="section-heading"><div><h2>Leads</h2><p>Review and update sales opportunities.</p></div></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>ID</th><th>Customer</th><th>Requirement</th><th>Priority</th><th>Status</th></tr></thead>
+                    <tbody id="leadTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section glass-panel" id="issues-section">
+            <div class="section-heading">
+                <div><h2>Issues</h2><p>Track customer support requests.</p></div>
+                <div class="filter-row"><label for="issueStatusFilter">Status</label>
+                    <select id="issueStatusFilter" onchange="loadDashboard()">
+                        <option value="">All</option>
+                        <option value="open">Open</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>ID</th><th>Customer</th><th>Description</th><th>Priority</th><th>Status</th></tr></thead>
+                    <tbody id="issueTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section glass-panel" id="meetings-section">
+            <div class="section-heading">
+                <div><h2>Meetings</h2><p>Manage booking requests and confirmations.</p></div>
+                <div class="filter-row"><label for="meetingStatusFilter">Status</label>
+                    <select id="meetingStatusFilter" onchange="loadDashboard()">
+                        <option value="">All Meetings</option>
+                        <option value="awaiting_confirmation">Awaiting Confirmation</option>
+                        <option value="booked">Booked</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>ID</th><th>Customer</th><th>Start</th><th>End</th><th>Status</th><th>Calendar Event</th></tr></thead>
+                    <tbody id="meetingTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section glass-panel" id="settings-section">
+            <div class="section-heading"><div><h2>Settings</h2><p>Dashboard appearance and session controls.</p></div></div>
+            <button class="secondary-button" type="button" onclick="loadDashboard()">Refresh dashboard data</button>
+        </section>
+
+        <footer class="app-footer">ZYRONIQ <span>•</span> AI-powered customer management</footer>
+    </main>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/dashboard-ui.js?v=1"></script>
 </body>
 </html>
-
-
